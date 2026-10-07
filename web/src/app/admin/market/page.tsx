@@ -88,6 +88,20 @@ export default function AdminMarketPage() {
   const loadDashboard = async () => {
     setDashboardError("");
 
+    const { error: claimError } = await supabase.rpc(
+      "claim_admin_identity"
+    );
+
+    if (claimError) {
+      setDashboardError(
+        claimError.message === "admin_account_not_configured"
+          ? "حساب مدیریت اصلی در سامانه تنظیم نشده است."
+          : "احراز هویت مدیر ناموفق بود."
+      );
+      setDashboard(null);
+      return;
+    }
+
     const { data, error } = await supabase.rpc("get_admin_market_dashboard");
 
     if (error) {
