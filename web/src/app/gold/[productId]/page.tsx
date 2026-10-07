@@ -1,89 +1,342 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
+import { supabase } from "../../../lib/supabase";
 import { trackEvent } from "../../../lib/analytics";
 
-const product = {
-  id: 1,
-  title: "انگشتر طلای ظریف",
-  category: "انگشتر",
-  weight: "۳.۲ گرم",
-  karat: "۱۸ عیار",
-  wage: "۸٪",
-  stock: "موجود",
-  price: "۲۳۸٬۴۰۰٬۰۰۰ تومان",
-  baseGoldPrice: "۷۴٬۵۰۰٬۰۰۰ تومان",
-  stone: "ندارد",
-  color: "طلای زرد",
-  wageType: "درصدی",
-  productCode: "TY-1001",
-  description:
-    "انگشتر طلای ظریف با طراحی مینیمال و مناسب استفاده روزمره. این محصول از طلای ۱۸ عیار ساخته شده و برای کسانی که به مدل‌های ساده و ظریف علاقه دارند گزینه‌ای مناسب است.",
+type ProductData = {
+  id: number;
+  title: string;
+  category: string;
+  weight: number;
+  karat: number;
+  wageValue: number;
+  wageType: "percent" | "fixed";
+  stock: string;
+  price: number;
+  baseGoldPrice: number;
+  stone: string;
+  color: string;
+  wageTypeLabel: string;
+  productCode: string;
+  description: string;
   shop: {
-    name: "گالری طلای آریا",
-    city: "ارومیه",
-    address: "خیابان امام، پاساژ طلا",
-    phone: "04400000000",
-    instagram: "example_gold",
-  },
-  images: [
-    "/hero-luxury.jpg",
-    "/hero-luxury.jpg",
-    "/hero-luxury.jpg",
-    "/hero-luxury.jpg",
-  ],
+    id: number;
+    name: string;
+    city: string;
+    address: string;
+    phone: string;
+    instagram: string;
+    latitude: number | null;
+    longitude: number | null;
+  };
+  images: string[];
 };
 
-const relatedProducts = [
-  {
-    id: 2,
-    title: "گردنبند طلای کلاسیک",
-    category: "گردنبند",
-    price: "۴۸۲٬۰۰۰٬۰۰۰ تومان",
-    image: "/hero-luxury.jpg",
-  },
-  {
-    id: 3,
-    title: "دستبند طلای مینیمال",
-    category: "دستبند",
-    price: "۳۵۹٬۰۰۰٬۰۰۰ تومان",
-    image: "/hero-luxury.jpg",
-  },
-  {
-    id: 4,
-    title: "گوشواره طلای ظریف",
-    category: "گوشواره",
-    price: "۲۰۱٬۰۰۰٬۰۰۰ تومان",
-    image: "/hero-luxury.jpg",
-  },
-];
+type RelatedProduct = {
+  id: number;
+  title: string;
+  category: string;
+  price: string;
+  image: string;
+};
+
+type RawProduct = {
+  id: number;
+  shop_id: number;
+  category_id: number | null;
+  title: string | null;
+  description: string | null;
+  weight: number | null;
+  karat: number | null;
+  wage_type: string | null;
+  wage_value: number | null;
+  profit_percent: number | null;
+  extra_fee: number | null;
+  image: string | null;
+  status: string | null;
+};
+
+type RawShop = {
+  id: number;
+  shop_name: string | null;
+  city: string | null;
+  phone: string | null;
+  instagram: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  status: string | null;
+};
+
+function formatToman(value: number) {
+  return `${Math.round(value).toLocaleString("fa-IR")} تومان`;
+}
+
+function calculatePrice(product: RawProduct, gold18Price: number) {
+  const weight = Number(product.weight ?? 0);
+  const goldValue = weight * gold18Price;
+  const wage =
+    product.wage_type === "percent"
+      ? goldValue * (Number(product.wage_value ?? 0) / 100)
+      : Number(product.wage_value ?? 0);
+  const profit =
+    (goldValue + wage) *
+    (Number(product.profit_percent ?? 0) / 100);
+  const extra = Number(product.extra_fee ?? 0);
+
+  return {
+    goldValue,
+    wage,
+    profit,
+    extra,
+    total: goldValue + wage + profit + extra,
+  };
+}
+
+function createProductData(
+  rawProduct: RawProduct,
+  shop: RawShop,
+  categoryName: string,
+  gold18Price: number
+): ProductData {
+  const pricing = calculatePrice(rawProduct, gold18Price);
+
+  return {
+    id: rawProduct.id,
+    title: rawProduct.title ?? "محصول طلا",
+    category: categoryName || "سایر",
+    weight: Number(rawProduct.weight ?? 0),
+    karat: Number(rawProduct.karat ?? 18),
+    wageValue: Number(rawProduct.wage_value ?? 0),
+    wageType: rawProduct.wage_type === "percent" ? "percent" : "fixed",
+    stock: rawProduct.status === "active" ? "موجود" : "ناموجود",
+    price: pricing.total,
+    baseGoldPrice: gold18Price,
+    stone: "نامشخص",
+    color: "طلای زرد",
+    wageTypeLabel:
+      rawProduct.wage_type === "percent" ? "درصدی" : "ثابت",
+    productCode: `TY-${String(rawProduct.id).padStart(4, "0")}`,
+    description:
+      rawProduct.description ||
+      "اطلاعات توضیحات این محصول هنوز توسط فروشگاه تکمیل نشده است.",
+    shop: {
+      id: shop.id,
+      name: shop.shop_name ?? "فروشگاه طلا",
+      city: shop.city ?? "—",
+      address: shop.city ?? "موقعیت فروشگاه",
+      phone: shop.phone ?? "",
+      instagram: shop.instagram ?? "",
+      latitude: shop.latitude,
+      longitude: shop.longitude,
+    },
+    images: [rawProduct.image || "/hero-luxury.jpg"],
+  };
+}
 
 export default function ProductPage() {
+  const params = useParams<{ productId: string }>();
+  const [product, setProduct] = useState<ProductData | null>(null);
+  const [relatedProducts, setRelatedProducts] = useState<RelatedProduct[]>([]);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+  const viewTracked = useRef(false);
 
   useEffect(() => {
+    const productId = Number(params.productId);
+
+    if (!Number.isInteger(productId) || productId <= 0) {
+      setErrorMessage("شناسه محصول نامعتبر است.");
+      setLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadProduct() {
+      setLoading(true);
+      setErrorMessage("");
+
+      const { data: rawProduct, error: productError } =
+        await supabase
+          .from("products")
+          .select(
+            "id, shop_id, category_id, title, description, weight, karat, wage_type, wage_value, profit_percent, extra_fee, image, status"
+          )
+          .eq("id", productId)
+          .eq("status", "active")
+          .maybeSingle();
+
+      if (productError || !rawProduct) {
+        if (!cancelled) {
+          setErrorMessage("محصول موردنظر پیدا نشد.");
+          setLoading(false);
+        }
+        return;
+      }
+
+      const [shopResult, categoryResult, marketResult, relatedResult] =
+        await Promise.all([
+          supabase
+            .from("shops___")
+            .select(
+              "id, shop_name, city, phone, instagram, latitude, longitude, status"
+            )
+            .eq("id", rawProduct.shop_id)
+            .eq("status", "active")
+            .maybeSingle(),
+          rawProduct.category_id
+            ? supabase
+                .from("categories")
+                .select("name")
+                .eq("id", rawProduct.category_id)
+                .maybeSingle()
+            : Promise.resolve({ data: null, error: null }),
+          supabase
+            .from("market_prices")
+            .select("gold18, updated_at")
+            .order("id", { ascending: false })
+            .limit(1)
+            .maybeSingle(),
+          supabase
+            .from("products")
+            .select(
+              "id, title, weight, karat, wage_type, wage_value, profit_percent, extra_fee, image, category_id"
+            )
+            .eq("shop_id", rawProduct.shop_id)
+            .eq("status", "active")
+            .neq("id", rawProduct.id)
+            .order("id", { ascending: false })
+            .limit(3),
+        ]);
+
+      if (
+        shopResult.error ||
+        !shopResult.data ||
+        categoryResult.error ||
+        marketResult.error
+      ) {
+        if (!cancelled) {
+          setErrorMessage("دریافت اطلاعات کامل محصول ناموفق بود.");
+          setLoading(false);
+        }
+        return;
+      }
+
+      const gold18Price = Number(marketResult.data?.gold18 ?? 0);
+      const nextProduct = createProductData(
+        rawProduct as RawProduct,
+        shopResult.data as RawShop,
+        categoryResult.data?.name ?? "سایر",
+        gold18Price
+      );
+
+      const relatedRows = relatedResult.data ?? [];
+      const categoryIds = [
+        ...new Set(
+          relatedRows
+            .map((row) => row.category_id)
+            .filter((id): id is number => id !== null)
+        ),
+      ];
+
+      const categoryMap = new Map<number, string>();
+
+      if (categoryIds.length) {
+        const { data: categoryRows } = await supabase
+          .from("categories")
+          .select("id, name")
+          .in("id", categoryIds);
+
+        (categoryRows ?? []).forEach((row) => {
+          categoryMap.set(row.id, row.name);
+        });
+      }
+
+      const nextRelated = relatedRows.map((row) => ({
+        id: row.id,
+        title: row.title ?? "محصول طلا",
+        category: categoryMap.get(row.category_id) ?? "سایر",
+        price: formatToman(
+          calculatePrice(row as RawProduct, gold18Price).total
+        ),
+        image: row.image || "/hero-luxury.jpg",
+      }));
+
+      if (!cancelled) {
+        setProduct(nextProduct);
+        setRelatedProducts(nextRelated);
+        setSelectedImage(0);
+        setLoading(false);
+      }
+    }
+
+    void loadProduct();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [params.productId]);
+
+  useEffect(() => {
+    if (!product || viewTracked.current) return;
+    viewTracked.current = true;
+
     void trackEvent({
       eventType: "product_view",
-      shopId: 1,
+      shopId: product.shop.id,
       productId: product.id,
     });
-  }, []);
-  const [viewerOpen, setViewerOpen] = useState(false);
+  }, [product]);
 
   const nextImage = () => {
+    if (!product) return;
     setSelectedImage((current) =>
       current === product.images.length - 1 ? 0 : current + 1
     );
   };
 
   const previousImage = () => {
+    if (!product) return;
     setSelectedImage((current) =>
       current === 0 ? product.images.length - 1 : current - 1
     );
   };
 
-  return (
+  if (loading) {
+    return (
+      <main dir="rtl" className="flex min-h-screen items-center justify-center bg-[#F4F8F6] text-[#173C32]">
+        <div className="rounded-3xl border border-[#DDE7E1] bg-white px-8 py-10 text-center shadow-sm">
+          <div className="text-lg font-extrabold">در حال بارگذاری محصول...</div>
+          <div className="mt-2 text-sm text-[#7A8B83]">
+            اطلاعات محصول از فروشگاه دریافت می‌شود.
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  if (!product) {
+    return (
+      <main dir="rtl" className="flex min-h-screen items-center justify-center bg-[#F4F8F6] text-[#173C32]">
+        <div className="rounded-3xl border border-[#DDE7E1] bg-white px-8 py-10 text-center shadow-sm">
+          <div className="text-lg font-extrabold">{errorMessage || "محصول پیدا نشد."}</div>
+          <Link
+            href="/gold"
+            className="mt-5 inline-flex rounded-xl bg-[#173C32] px-5 py-3 text-sm font-bold text-white"
+          >
+            بازگشت به فهرست طلاها
+          </Link>
+        </div>
+      </main>
+    );
+  }
+
+    return (
     <main
       dir="rtl"
       className="min-h-screen bg-gradient-to-b from-[#EDF7F2] via-[#F8FBF9] to-[#ECF5F0] text-[#173C32]"
@@ -275,7 +528,7 @@ export default function ProductPage() {
                 </div>
 
                 <div className="mt-1 text-sm font-semibold text-[#31584D]">
-                  امروز - ۱۰:۲۵
+                  قیمت زنده از بازار طلایاب
                 </div>
               </div>
             </div>
@@ -287,7 +540,7 @@ export default function ProductPage() {
                 </div>
 
                 <div className="mt-2 font-bold text-[#173C32]">
-                  {product.weight}
+                  {product.weight.toLocaleString("fa-IR")} گرم
                 </div>
               </div>
 
@@ -297,7 +550,7 @@ export default function ProductPage() {
                 </div>
 
                 <div className="mt-2 font-bold text-[#173C32]">
-                  {product.karat}
+                  {product.karat.toLocaleString("fa-IR")} عیار
                 </div>
               </div>
 
@@ -307,7 +560,7 @@ export default function ProductPage() {
                 </div>
 
                 <div className="mt-2 font-bold text-[#173C32]">
-                  {product.wage}
+                  {product.wageValue.toLocaleString("fa-IR")}{product.wageType === "percent" ? "٪" : " تومان"}
                 </div>
               </div>
 
@@ -332,7 +585,7 @@ export default function ProductPage() {
                 </div>
 
                 <div className="mt-2 text-2xl font-extrabold text-[#173C32] md:text-4xl">
-                  {product.price}
+                  {formatToman(product.price)}
                 </div>
               </div>
 
@@ -342,7 +595,7 @@ export default function ProductPage() {
                 </div>
 
                 <div className="mt-1 font-bold text-[#173C32]">
-                  {product.baseGoldPrice}
+                  {formatToman(product.baseGoldPrice)}
                 </div>
               </div>
             </div>
@@ -356,7 +609,7 @@ export default function ProductPage() {
               </h2>
 
               <p className="mt-2 text-sm leading-7 text-[#71837B]">
-                قیمت نهایی محصول بر اساس قیمت روز طلا، وزن، اجرت و سایر
+                قیمت فعلی محاسبه‌شده محصول بر اساس قیمت روز طلا، وزن، اجرت و سایر
                 هزینه‌های مربوط به محصول محاسبه می‌شود.
               </p>
             </div>
@@ -368,7 +621,7 @@ export default function ProductPage() {
                 </span>
 
                 <span className="font-bold text-[#173C32]">
-                  {product.baseGoldPrice}
+                  {formatToman(product.baseGoldPrice)}
                 </span>
               </div>
 
@@ -378,7 +631,7 @@ export default function ProductPage() {
                 </span>
 
                 <span className="font-bold text-[#173C32]">
-                  {product.weight}
+                  {product.weight.toLocaleString("fa-IR")} گرم
                 </span>
               </div>
 
@@ -388,7 +641,7 @@ export default function ProductPage() {
                 </span>
 
                 <span className="font-bold text-[#173C32]">
-                  {product.wage}
+                  {product.wageValue.toLocaleString("fa-IR")}{product.wageType === "percent" ? "٪" : " تومان"}
                 </span>
               </div>
 
@@ -398,7 +651,7 @@ export default function ProductPage() {
                 </span>
 
                 <span className="text-lg font-extrabold text-[#A57D18]">
-                  {product.price}
+                  {formatToman(product.price)}
                 </span>
               </div>
             </div>
@@ -447,7 +700,7 @@ export default function ProductPage() {
                 </span>
 
                 <span className="font-semibold text-[#173C32]">
-                  {product.wageType}
+                  {product.wageTypeLabel}
                 </span>
               </div>
 
@@ -467,7 +720,7 @@ export default function ProductPage() {
                 </span>
 
                 <span className="font-semibold text-[#173C32]">
-                  {product.karat}
+                  {product.karat.toLocaleString("fa-IR")} عیار
                 </span>
               </div>
             </div>
@@ -510,7 +763,7 @@ export default function ProductPage() {
                     onClick={() => {
                       void trackEvent({
                         eventType: "contact_click",
-                        shopId: 1,
+                        shopId: product.shop.id,
                         productId: product.id,
                       });
                     }}
@@ -524,7 +777,7 @@ export default function ProductPage() {
                     onClick={() => {
                       void trackEvent({
                         eventType: "instagram_click",
-                        shopId: 1,
+                        shopId: product.shop.id,
                         productId: product.id,
                       });
                     }}
@@ -556,7 +809,7 @@ export default function ProductPage() {
                         onClick={() => {
                           void trackEvent({
                             eventType: "map_click",
-                            shopId: 1,
+                            shopId: product.shop.id,
                             productId: product.id,
                           });
                         }}

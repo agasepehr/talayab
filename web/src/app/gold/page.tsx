@@ -1,58 +1,37 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { supabase } from "../../lib/supabase";
+import { trackEvent } from "../../lib/analytics";
 
-const products = [
-  {
-    id: 1,
-    title: "انگشتر طلای ظریف",
-    category: "انگشتر",
-    weight: "۳.۲ گرم",
-    karat: "۱۸ عیار",
-    wage: "۸٪",
-    price: "۲۳۸٬۴۰۰٬۰۰۰ تومان",
-    shop: "گالری طلای آریا",
-    city: "ارومیه",
-    image: "/hero-luxury.jpg",
-  },
-  {
-    id: 2,
-    title: "گردنبند طلای کلاسیک",
-    category: "گردنبند",
-    weight: "۶.۵ گرم",
-    karat: "۱۸ عیار",
-    wage: "۱۰٪",
-    price: "۴۸۲٬۰۰۰٬۰۰۰ تومان",
-    shop: "طلافروشی الماس",
-    city: "ارومیه",
-    image: "/hero-luxury.jpg",
-  },
-  {
-    id: 3,
-    title: "دستبند طلای مینیمال",
-    category: "دستبند",
-    weight: "۴.۸ گرم",
-    karat: "۱۸ عیار",
-    wage: "۹٪",
-    price: "۳۵۹٬۰۰۰٬۰۰۰ تومان",
-    shop: "گالری طلا و جواهر نیک",
-    city: "ارومیه",
-    image: "/hero-luxury.jpg",
-  },
-  {
-    id: 4,
-    title: "گوشواره طلای ظریف",
-    category: "گوشواره",
-    weight: "۲.۷ گرم",
-    karat: "۱۸ عیار",
-    wage: "۷٪",
-    price: "۲۰۱٬۰۰۰٬۰۰۰ تومان",
-    shop: "گالری زرین",
-    city: "ارومیه",
-    image: "/hero-luxury.jpg",
-  },
-];
+type RawProduct = {
+  id: number;
+  shop_id: number;
+  category_id: number | null;
+  title: string | null;
+  weight: number | null;
+  karat: number | null;
+  wage_type: string | null;
+  wage_value: number | null;
+  profit_percent: number | null;
+  extra_fee: number | null;
+  image: string | null;
+};
+
+type CatalogProduct = {
+  id: number;
+  title: string;
+  category: string;
+  weight: string;
+  karat: string;
+  wage: string;
+  price: string;
+  shop: string;
+  city: string;
+  image: string;
+  shopId: number;
+};
 
 const categories = [
   "همه",
@@ -62,10 +41,129 @@ const categories = [
   "گوشواره",
 ];
 
+function formatToman(value: number) {
+  return `${Math.round(value).toLocaleString("fa-IR")} تومان`;
+}
+
+function calculatePrice(product: RawProduct, gold18Price: number) {
+  const weight = Number(product.weight ?? 0);
+  const goldValue = weight * gold18Price;
+  const wage =
+    product.wage_type === "percent"
+      ? goldValue * (Number(product.wage_value ?? 0) / 100)
+      : Number(product.wage_value ?? 0);
+  const profit =
+    (goldValue + wage) *
+    (Number(product.profit_percent ?? 0) / 100);
+  const extra = Number(product.extra_fee ?? 0);
+
+  return goldValue + wage + profit + extra;
+}
+
 export default function GoldPage() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("همه");
   const [sort, setSort] = useState("جدیدترین");
+  const [products, setProducts] = useState<CatalogProduct[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadProducts() {
+      setLoading(true);
+      setErrorMessage("");
+
+      const [productsResult, categoriesResult, marketResult] =
+        await Promise.all([
+          supabase
+            .from("products")
+            .select(
+              "id, shop_id, category_id, title, weight, karat, wage_type, wage_value, profit_percent, extra_fee, image"
+            )
+            .eq("status", "active")
+            .order("id", { ascending: false }),
+          supabase.from("categories").select("id, name"),
+          supabase
+            .from("market_prices")
+            .select("gold18")
+            .order("id", { ascending: false })
+            .limit(1)
+            .maybeSingle(),
+        ]);
+
+      if (
+        productsResult.error ||
+        categoriesResult.error ||
+        marketResult.error
+      ) {
+        if (!cancelled) {
+          setErrorMessage("دریافت فهرست طلاها ناموفق بود.");
+          setLoading(false);
+        }
+        return;
+      }
+
+      const rawProducts = (productsResult.data ?? []) as RawProduct[];
+      const categoryMap = new Map<number, string>();
+
+      (categoriesResult.data ?? []).forEach((item) => {
+        categoryMap.set(item.id, item.name);
+      });
+
+      const shopIds = [...new Set(rawProducts.map((item) => item.shop_id))];
+      const shopMap = new Map<
+        number,
+        { shop_name: string | null; city: string | null }
+      >();
+
+      if (shopIds.length) {
+        const { data: shopRows } = await supabase
+          .from("shops___")
+          .select("id, shop_name, city")
+          .in("id", shopIds);
+
+        (shopRows ?? []).forEach((shop) => {
+          shopMap.set(shop.id, shop);
+        });
+      }
+
+      const gold18 = Number(marketResult.data?.gold18 ?? 0);
+
+      const mapped = rawProducts.map((product) => {
+        const shop = shopMap.get(product.shop_id);
+
+        return {
+          id: product.id,
+          title: product.title ?? "محصول طلا",
+          category: categoryMap.get(product.category_id ?? 0) ?? "سایر",
+          weight: `${Number(product.weight ?? 0).toLocaleString("fa-IR")} گرم`,
+          karat: `${Number(product.karat ?? 18).toLocaleString("fa-IR")} عیار`,
+          wage:
+            product.wage_type === "percent"
+              ? `${Number(product.wage_value ?? 0).toLocaleString("fa-IR")}٪`
+              : formatToman(Number(product.wage_value ?? 0)),
+          price: formatToman(calculatePrice(product, gold18)),
+          shop: shop?.shop_name ?? "فروشگاه طلا",
+          city: shop?.city ?? "—",
+          image: product.image || "/hero-luxury.jpg",
+          shopId: product.shop_id,
+        };
+      });
+
+      if (!cancelled) {
+        setProducts(mapped);
+        setLoading(false);
+      }
+    }
+
+    void loadProducts();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const filteredProducts = useMemo(() => {
     let result = products.filter((product) => {
@@ -87,9 +185,23 @@ export default function GoldPage() {
     }
 
     return result;
-  }, [search, category, sort]);
+  }, [products, search, category, sort]);
 
-  return (
+  useEffect(() => {
+    if (!filteredProducts.length) return;
+
+    void Promise.all(
+      filteredProducts.map((product) =>
+        trackEvent({
+          eventType: "list_impression",
+          shopId: product.shopId,
+          productId: product.id,
+        })
+      )
+    );
+  }, [filteredProducts]);
+
+    return (
     <main
       dir="rtl"
       className="min-h-screen bg-white text-[#173C32]"
@@ -240,7 +352,22 @@ export default function GoldPage() {
         </div>
 
         {/* Products */}
-        {filteredProducts.length > 0 ? (
+        {loading ? (
+          <div className="rounded-3xl border border-[#DDE8E1] bg-[#FAFCFB] px-6 py-16 text-center">
+            <div className="text-lg font-bold text-[#173C32]">
+              در حال دریافت محصولات...
+            </div>
+            <p className="mt-2 text-sm text-[#7B8C84]">
+              اطلاعات از فروشگاه‌های فعال طلایاب دریافت می‌شود.
+            </p>
+          </div>
+        ) : errorMessage ? (
+          <div className="rounded-3xl border border-dashed border-[#DDE8E1] bg-[#FAFCFB] px-6 py-16 text-center">
+            <div className="text-lg font-bold text-[#173C32]">
+              {errorMessage}
+            </div>
+          </div>
+        ) : filteredProducts.length > 0 ? (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
             {filteredProducts.map((product) => (
               <Link
