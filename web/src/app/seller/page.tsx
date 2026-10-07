@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { supabase } from "../../lib/supabase";
 
 type Product = {
   id: number;
@@ -19,6 +20,20 @@ type Product = {
   storePageViews: number;
 };
 
+type AnalyticsProduct = {
+  id: number;
+  name: string;
+  category: string;
+  weight: number | null;
+  views: number;
+  uniqueViews: number;
+  contactClicks: number;
+  mapClicks: number;
+  instagramClicks: number;
+  listImpressions: number;
+  storePageViews: number;
+};
+
 type TimeRange = "امروز" | "۷ روز" | "۳۰ روز" | "۳ ماه";
 
 const initialProducts: Product[] = [
@@ -27,68 +42,23 @@ const initialProducts: Product[] = [
     name: "انگشتر طلای ظریف",
     category: "انگشتر",
     weight: "۳.۲ گرم",
-    price: "۲۳۸٬۴۰۰٬۰۰۰ تومان",
+    price: "—",
     status: "فعال",
-    views: 320,
-    uniqueViews: 248,
-    contactClicks: 28,
-    mapClicks: 11,
-    instagramClicks: 7,
-    listImpressions: 1840,
-    storePageViews: 92,
-  },
-  {
-    id: 2,
-    name: "گردنبند طلای کلاسیک",
-    category: "گردنبند",
-    weight: "۶.۵ گرم",
-    price: "۴۸۲٬۰۰۰٬۰۰۰ تومان",
-    status: "فعال",
-    views: 286,
-    uniqueViews: 221,
-    contactClicks: 24,
-    mapClicks: 9,
-    instagramClicks: 5,
-    listImpressions: 1560,
-    storePageViews: 71,
-  },
-  {
-    id: 3,
-    name: "دستبند طلای مینیمال",
-    category: "دستبند",
-    weight: "۴.۸ گرم",
-    price: "۳۵۹٬۰۰۰٬۰۰۰ تومان",
-    status: "فعال",
-    views: 214,
-    uniqueViews: 173,
-    contactClicks: 17,
-    mapClicks: 8,
-    instagramClicks: 4,
-    listImpressions: 1290,
-    storePageViews: 54,
-  },
-  {
-    id: 4,
-    name: "گوشواره طلای ظریف",
-    category: "گوشواره",
-    weight: "۲.۷ گرم",
-    price: "۲۰۱٬۰۰۰٬۰۰۰ تومان",
-    status: "غیرفعال",
-    views: 146,
-    uniqueViews: 118,
-    contactClicks: 8,
-    mapClicks: 4,
-    instagramClicks: 2,
-    listImpressions: 930,
-    storePageViews: 31,
+    views: 0,
+    uniqueViews: 0,
+    contactClicks: 0,
+    mapClicks: 0,
+    instagramClicks: 0,
+    listImpressions: 0,
+    storePageViews: 0,
   },
 ];
 
-const rangeMultiplier: Record<TimeRange, number> = {
-  امروز: 0.08,
-  "۷ روز": 0.35,
-  "۳۰ روز": 1,
-  "۳ ماه": 2.65,
+const rangeDays: Record<TimeRange, number> = {
+  امروز: 1,
+  "۷ روز": 7,
+  "۳۰ روز": 30,
+  "۳ ماه": 90,
 };
 
 function formatNumber(value: number) {
@@ -113,6 +83,13 @@ export default function SellerPanelPage() {
 
   const [timeRange, setTimeRange] = useState<TimeRange>("۳۰ روز");
 
+  const [analyticsProducts, setAnalyticsProducts] = useState<
+    AnalyticsProduct[]
+  >([]);
+
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const [analyticsError, setAnalyticsError] = useState("");
+
   const [showSuccess, setShowSuccess] = useState(false);
 
   const [form, setForm] = useState({
@@ -126,24 +103,53 @@ export default function SellerPanelPage() {
     description: "",
   });
 
-  const selectedProduct = products.find(
-    (product) => product.id === selectedProductId
-  );
+  const loadAnalytics = async (range: TimeRange) => {
+    setAnalyticsLoading(true);
+    setAnalyticsError("");
 
-  const multiplier = rangeMultiplier[timeRange];
+    const { data, error } = await supabase.rpc(
+      "get_demo_seller_analytics",
+      { p_days: rangeDays[range] }
+    );
 
-  const filteredProducts = useMemo(() => {
-    return products.map((product) => ({
-      ...product,
-      views: Math.round(product.views * multiplier),
-      uniqueViews: Math.round(product.uniqueViews * multiplier),
-      contactClicks: Math.round(product.contactClicks * multiplier),
-      mapClicks: Math.round(product.mapClicks * multiplier),
-      instagramClicks: Math.round(product.instagramClicks * multiplier),
-      listImpressions: Math.round(product.listImpressions * multiplier),
-      storePageViews: Math.round(product.storePageViews * multiplier),
-    }));
-  }, [products, multiplier]);
+    if (error) {
+      setAnalyticsProducts([]);
+      setAnalyticsError("دریافت آمار واقعی ناموفق بود.");
+      setAnalyticsLoading(false);
+      return;
+    }
+
+    const rows = Array.isArray(data?.products)
+      ? data.products
+      : [];
+
+    setAnalyticsProducts(
+      rows.map((row: Record<string, unknown>) => ({
+        id: Number(row.id),
+        name: String(row.name ?? "محصول طلا"),
+        category: String(row.category ?? "سایر"),
+        weight:
+          row.weight === null || row.weight === undefined
+            ? null
+            : Number(row.weight),
+        views: Number(row.views ?? 0),
+        uniqueViews: Number(row.unique_views ?? 0),
+        contactClicks: Number(row.contact_clicks ?? 0),
+        mapClicks: Number(row.map_clicks ?? 0),
+        instagramClicks: Number(row.instagram_clicks ?? 0),
+        listImpressions: Number(row.list_impressions ?? 0),
+        storePageViews: Number(row.store_page_views ?? 0),
+      }))
+    );
+
+    setAnalyticsLoading(false);
+  };
+
+  useEffect(() => {
+    void loadAnalytics(timeRange);
+  }, [timeRange]);
+
+  const filteredProducts = analyticsProducts;
 
   const analyticsTotals = useMemo(() => {
     return filteredProducts.reduce(
@@ -169,9 +175,9 @@ export default function SellerPanelPage() {
     );
   }, [filteredProducts]);
 
-  const selectedAnalytics = selectedProduct
-    ? filteredProducts.find((product) => product.id === selectedProduct.id)
-    : null;
+  const selectedAnalytics = filteredProducts.find(
+    (product) => product.id === selectedProductId
+  );
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -649,7 +655,7 @@ export default function SellerPanelPage() {
                   </h2>
 
                   <p className="mt-2 text-sm leading-7 text-[#71837B]">
-                    آمار بازدید و تعامل کاربران با محصولات و فروشگاه
+                    آمار واقعی بازدید و تعامل کاربران با محصولات و فروشگاه
                     شما.
                   </p>
                 </div>
@@ -679,6 +685,18 @@ export default function SellerPanelPage() {
                 </div>
               </div>
             </div>
+
+            {analyticsLoading && (
+              <div className="rounded-2xl border border-[#DDE7E1] bg-white px-4 py-3 text-sm font-bold text-[#4C685E]">
+                در حال دریافت آمار واقعی...
+              </div>
+            )}
+
+            {analyticsError && (
+              <div className="rounded-2xl border border-[#E6D8C8] bg-[#FFF9F2] px-4 py-3 text-sm font-bold text-[#8A6425]">
+                {analyticsError}
+              </div>
+            )}
 
             {/* Summary Stats */}
             <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
