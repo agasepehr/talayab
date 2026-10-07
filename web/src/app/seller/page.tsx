@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabase";
 
+
 type Product = {
   id: number;
   name: string;
@@ -18,13 +19,25 @@ type Product = {
   instagramClicks: number;
   listImpressions: number;
   storePageViews: number;
+  karat: number;
+  wageValue: number;
+  extraFee: number;
+  description: string;
 };
 
 type AnalyticsProduct = {
   id: number;
   name: string;
   category: string;
-  weight: number | null;
+  views: number;
+  uniqueViews: number;
+  contactClicks: number;
+  mapClicks: number;
+  instagramClicks: number;
+  listImpressions: number;
+};
+
+type AnalyticsSummary = {
   views: number;
   uniqueViews: number;
   contactClicks: number;
@@ -35,24 +48,6 @@ type AnalyticsProduct = {
 };
 
 type TimeRange = "امروز" | "۷ روز" | "۳۰ روز" | "۳ ماه";
-
-const initialProducts: Product[] = [
-  {
-    id: 1,
-    name: "انگشتر طلای ظریف",
-    category: "انگشتر",
-    weight: "۳.۲ گرم",
-    price: "—",
-    status: "فعال",
-    views: 0,
-    uniqueViews: 0,
-    contactClicks: 0,
-    mapClicks: 0,
-    instagramClicks: 0,
-    listImpressions: 0,
-    storePageViews: 0,
-  },
-];
 
 const rangeDays: Record<TimeRange, number> = {
   امروز: 1,
@@ -65,132 +60,63 @@ function formatNumber(value: number) {
   return new Intl.NumberFormat("fa-IR").format(value);
 }
 
+function formatToman(value: number) {
+  return Math.round(value).toLocaleString("fa-IR") + " تومان";
+}
+
+function normalizeDigits(value: string) {
+  return value
+    .replace(/[۰-۹]/g, (digit) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit)))
+    .replace(/[٠-٩]/g, (digit) => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)));
+}
+
+function toNumber(value: string) {
+  const number = Number(
+    normalizeDigits(value).replace(/[,٬،]/g, "").replace(/٪/g, "").trim()
+  );
+  return Number.isFinite(number) ? number : 0;
+}
+
 function calculateRate(clicks: number, views: number) {
   if (!views) return "۰٪";
-  return `${((clicks / views) * 100).toFixed(1).replace(".", "٫")}٪`;
+  return ((clicks / views) * 100).toFixed(1).replace(".", "٫") + "٪";
 }
 
 export default function SellerPanelPage() {
+  const [session, setSession] = useState<Session | null>(null);
+  const [authChecking, setAuthChecking] = useState(true);
+  const [email, setEmail] = useState("");
+  const [authSending, setAuthSending] = useState(false);
+  const [authMessage, setAuthMessage] = useState("");
+  const [authError, setAuthError] = useState("");
+  const [profile, setProfile] = useState<{ id: number; full_name: string | null; email: string | null } | null>(null);
+  const [shop, setShop] = useState<{ id: number; shop_name: string | null; city: string | null; phone: string | null; instagram: string | null } | null>(null);
+  const [onboarding, setOnboarding] = useState({
+    shopName: "",
+    city: "",
+    phone: "",
+    instagram: "",
+  });
+  const [onboardingSaving, setOnboardingSaving] = useState(false);
+  const [onboardingError, setOnboardingError] = useState("");
+
   const [activeSection, setActiveSection] = useState<
     "add-product" | "analytics"
   >("add-product");
-
-  const [products, setProducts] = useState<Product[]>(initialProducts);
-
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
+  const [productsLoading, setProductsLoading] = useState(false);
+  const [productError, setProductError] = useState("");
+  const [editingProductId, setEditingProductId] = useState<number | null>(null);
   const [selectedProductId, setSelectedProductId] = useState<number | null>(
-    1
+    null
   );
-
   const [timeRange, setTimeRange] = useState<TimeRange>("۳۰ روز");
-
-  const [analyticsProducts, setAnalyticsProducts] = useState<
-    AnalyticsProduct[]
-  >([]);
-
-  const [analyticsLoading, setAnalyticsLoading] = useState(false);
-  const [analyticsError, setAnalyticsError] = useState("");
-
-  const [showSuccess, setShowSuccess] = useState(false);
-
-  const [form, setForm] = useState({
-    name: "",
-    category: "انگشتر",
-    weight: "",
-    karat: "۱۸ عیار",
-    wage: "",
-    price: "",
-    stock: "موجود",
-    description: "",
-  });
-
-  const loadAnalytics = async (range: TimeRange) => {
-    setAnalyticsLoading(true);
-    setAnalyticsError("");
-
-    const { data, error } = await supabase.rpc(
-      "get_demo_seller_analytics",
-      { p_days: rangeDays[range] }
-    );
-
-    if (error) {
-      setAnalyticsProducts([]);
-      setAnalyticsError("دریافت آمار واقعی ناموفق بود.");
-      setAnalyticsLoading(false);
-      return;
-    }
-
-    const rows = Array.isArray(data?.products)
-      ? data.products
-      : [];
-
-    setAnalyticsProducts(
-      rows.map((row: Record<string, unknown>) => ({
-        id: Number(row.id),
-        name: String(row.name ?? "محصول طلا"),
-        category: String(row.category ?? "سایر"),
-        weight:
-          row.weight === null || row.weight === undefined
-            ? null
-            : Number(row.weight),
-        views: Number(row.views ?? 0),
-        uniqueViews: Number(row.unique_views ?? 0),
-        contactClicks: Number(row.contact_clicks ?? 0),
-        mapClicks: Number(row.map_clicks ?? 0),
-        instagramClicks: Number(row.instagram_clicks ?? 0),
-        listImpressions: Number(row.list_impressions ?? 0),
-        storePageViews: Number(row.store_page_views ?? 0),
-      }))
-    );
-
-    setAnalyticsLoading(false);
-  };
-
-  useEffect(() => {
-    void loadAnalytics(timeRange);
-  }, [timeRange]);
-
-  const filteredProducts = analyticsProducts;
-
-  const analyticsTotals = useMemo(() => {
-    return filteredProducts.reduce(
-      (acc, product) => {
-        acc.views += product.views;
-        acc.uniqueViews += product.uniqueViews;
-        acc.contactClicks += product.contactClicks;
-        acc.mapClicks += product.mapClicks;
-        acc.instagramClicks += product.instagramClicks;
-        acc.listImpressions += product.listImpressions;
-        acc.storePageViews += product.storePageViews;
-        return acc;
-      },
-      {
-        views: 0,
-        uniqueViews: 0,
-        contactClicks: 0,
-        mapClicks: 0,
-        instagramClicks: 0,
-        listImpressions: 0,
-        storePageViews: 0,
-      }
-    );
-  }, [filteredProducts]);
-
-  const selectedAnalytics = filteredProducts.find(
-    (product) => product.id === selectedProductId
+  const [analyticsProducts, setAnalyticsProducts] = useState<AnalyticsProduct[]>(
+    []
   );
-
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    const newProduct: Product = {
-      id: products.length
-        ? Math.max(...products.map((product) => product.id)) + 1
-        : 1,
-      name: form.name || "محصول جدید",
-      category: form.category,
-      weight: form.weight || "۰ گرم",
-      price: form.price || "۰ تومان",
-      status: "فعال",
+  const [analyticsSummary, setAnalyticsSummary] =
+    useState<AnalyticsSummary>({
       views: 0,
       uniqueViews: 0,
       contactClicks: 0,
@@ -198,40 +124,707 @@ export default function SellerPanelPage() {
       instagramClicks: 0,
       listImpressions: 0,
       storePageViews: 0,
+    });
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const [analyticsError, setAnalyticsError] = useState("");
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  const [form, setForm] = useState({
+    name: "",
+    category: "انگشتر",
+    weight: "",
+    karat: "18",
+    wage: "8",
+    price: "",
+    stock: "موجود",
+    description: "",
+  });
+
+  const loadProducts = async (
+    shopId: number,
+    categoryRows: { id: number; name: string }[]
+  ) => {
+    setProductsLoading(true);
+    setProductError("");
+
+    const [productsResult, marketResult] = await Promise.all([
+      supabase
+        .from("products")
+        .select(
+          "id,title,category_id,weight,karat,wage_value,extra_fee,description,status"
+        )
+        .eq("shop_id", shopId)
+        .order("id", { ascending: false }),
+      supabase
+        .from("market_prices")
+        .select("gold18")
+        .order("id", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]);
+
+    if (productsResult.error || marketResult.error) {
+      setProductError("دریافت محصولات فروشگاه ناموفق بود.");
+      setProductsLoading(false);
+      return;
+    }
+
+    const categoryMap = new Map(
+      categoryRows.map((item) => [item.id, item.name])
+    );
+    const gold18 = Number(marketResult.data?.gold18 ?? 0);
+
+    const mapped = (productsResult.data ?? []).map((row) => {
+      const weight = Number(row.weight ?? 0);
+      const wageValue = Number(row.wage_value ?? 0);
+      const extraFee = Number(row.extra_fee ?? 0);
+      const goldValue = weight * gold18;
+      const price =
+        goldValue + goldValue * (wageValue / 100) + extraFee;
+
+      return {
+        id: row.id,
+        name: row.title ?? "محصول طلا",
+        category: categoryMap.get(row.category_id ?? 0) ?? "سایر",
+        weight: String(weight),
+        price: formatToman(price),
+        status: row.status === "active" ? "فعال" : "غیرفعال",
+        views: 0,
+        uniqueViews: 0,
+        contactClicks: 0,
+        mapClicks: 0,
+        instagramClicks: 0,
+        listImpressions: 0,
+        storePageViews: 0,
+        karat: Number(row.karat ?? 18),
+        wageValue,
+        extraFee,
+        description: row.description ?? "",
+      } as Product;
+    });
+
+    setProducts(mapped);
+    setSelectedProductId((current) => current ?? mapped[0]?.id ?? null);
+    setProductsLoading(false);
+  };
+
+  const loadAnalytics = async () => {
+    if (!session || !shop) return;
+
+    setAnalyticsLoading(true);
+    setAnalyticsError("");
+
+    const { data, error } = await supabase.rpc(
+      "get_seller_analytics",
+      { p_days: rangeDays[timeRange] }
+    );
+
+    if (error) {
+      setAnalyticsError("دریافت آمار واقعی ناموفق بود.");
+      setAnalyticsProducts([]);
+      setAnalyticsLoading(false);
+      return;
+    }
+
+    const summary = (data?.summary ?? {}) as Record<string, unknown>;
+
+    setAnalyticsSummary({
+      views: Number(summary.views ?? 0),
+      uniqueViews: Number(summary.unique_views ?? 0),
+      contactClicks: Number(summary.contact_clicks ?? 0),
+      mapClicks: Number(summary.map_clicks ?? 0),
+      instagramClicks: Number(summary.instagram_clicks ?? 0),
+      listImpressions: Number(summary.list_impressions ?? 0),
+      storePageViews: Number(summary.store_page_views ?? 0),
+    });
+
+    const rows = Array.isArray(data?.products)
+      ? data.products
+      : [];
+
+    const mapped = rows.map((row: Record<string, unknown>) => ({
+      id: Number(row.id),
+      name: String(row.name ?? "محصول طلا"),
+      category: String(row.category ?? "سایر"),
+      views: Number(row.views ?? 0),
+      uniqueViews: Number(row.unique_views ?? 0),
+      contactClicks: Number(row.contact_clicks ?? 0),
+      mapClicks: Number(row.map_clicks ?? 0),
+      instagramClicks: Number(row.instagram_clicks ?? 0),
+      listImpressions: Number(row.list_impressions ?? 0),
+    }));
+
+    setAnalyticsProducts(mapped);
+    setSelectedProductId((current) => current ?? mapped[0]?.id ?? null);
+    setAnalyticsLoading(false);
+  };
+
+  const loadSeller = async (currentSession: Session) => {
+    setAuthChecking(true);
+    setAuthError("");
+
+    const currentEmail =
+      currentSession.user.email?.trim().toLowerCase();
+
+    if (!currentEmail) {
+      setAuthError("ایمیل حساب فروشنده در دسترس نیست.");
+      setAuthChecking(false);
+      return;
+    }
+
+    const { data: foundUser, error: userError } = await supabase
+      .from("users")
+      .select("id,full_name,email,auth_user_id")
+      .eq("email", currentEmail)
+      .maybeSingle();
+
+    if (userError) {
+      setAuthError("دریافت حساب فروشنده ناموفق بود.");
+      setAuthChecking(false);
+      return;
+    }
+
+    let nextProfile = foundUser;
+
+    if (!nextProfile) {
+      const { data: createdUser, error: createError } = await supabase
+        .from("users")
+        .insert({
+          full_name:
+            currentSession.user.user_metadata?.full_name ??
+            currentEmail.split("@")[0],
+          email: currentEmail,
+          role: "seller",
+          auth_user_id: currentSession.user.id,
+        })
+        .select("id,full_name,email")
+        .single();
+
+      if (createError || !createdUser) {
+        setAuthError("ساخت حساب فروشنده ناموفق بود.");
+        setAuthChecking(false);
+        return;
+      }
+
+      nextProfile = createdUser;
+    } else {
+      const authId = (
+        nextProfile as { auth_user_id?: string | null }
+      ).auth_user_id;
+
+      if (authId !== currentSession.user.id) {
+        const { error: linkError } = await supabase
+          .from("users")
+          .update({ auth_user_id: currentSession.user.id })
+          .eq("id", nextProfile.id);
+
+        if (linkError) {
+          setAuthError("اتصال حساب فروشنده ناموفق بود.");
+          setAuthChecking(false);
+          return;
+        }
+      }
+    }
+
+    setProfile(nextProfile);
+
+    const [
+      { data: shopRow, error: shopError },
+      { data: categoryRows, error: categoryError },
+    ] = await Promise.all([
+      supabase
+        .from("shops___")
+        .select("id,shop_name,city,phone,instagram")
+        .eq("owner_id", nextProfile.id)
+        .order("id", { ascending: true })
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from("categories")
+        .select("id,name")
+        .order("id", { ascending: true }),
+    ]);
+
+    if (shopError || categoryError) {
+      setAuthError("دریافت اطلاعات فروشگاه ناموفق بود.");
+      setAuthChecking(false);
+      return;
+    }
+
+    setCategories(categoryRows ?? []);
+    setShop(shopRow);
+
+    if (shopRow) {
+      await loadProducts(shopRow.id, categoryRows ?? []);
+    } else {
+      setProducts([]);
+    }
+
+    setAuthChecking(false);
+  };
+
+  useEffect(() => {
+    let mounted = true;
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (!mounted) return;
+
+      setSession(data.session);
+
+      if (data.session) {
+        void loadSeller(data.session);
+      } else {
+        setAuthChecking(false);
+      }
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      setSession(nextSession);
+
+      if (nextSession) {
+        void loadSeller(nextSession);
+      } else {
+        setProfile(null);
+        setShop(null);
+        setProducts([]);
+        setAnalyticsProducts([]);
+        setAuthChecking(false);
+      }
+    });
+
+  
+  if (authChecking) {
+    return (
+      <main
+        dir="rtl"
+        className="flex min-h-screen items-center justify-center bg-[#F4F8F6] text-[#173C32]"
+      >
+        <div className="rounded-3xl border border-[#DDE7E1] bg-white px-8 py-10 text-center shadow-sm">
+          <div className="text-lg font-extrabold">
+            در حال بررسی حساب فروشنده...
+          </div>
+          <div className="mt-2 text-sm text-[#7A8B83]">
+            لطفاً چند لحظه صبر کنید.
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  if (!session) {
+    return (
+      <main
+        dir="rtl"
+        className="flex min-h-screen items-center justify-center bg-[#F4F8F6] px-4 py-10 text-[#173C32]"
+      >
+        <div className="w-full max-w-md rounded-[30px] border border-[#DDE7E1] bg-white p-6 shadow-[0_20px_70px_rgba(23,60,50,0.08)] md:p-8">
+          <div className="text-xs font-medium text-[#9A7518]">
+            پنل فروشندگان طلایاب
+          </div>
+          <h1 className="mt-2 text-2xl font-extrabold">
+            ورود به پنل فروشگاه
+          </h1>
+          <p className="mt-3 text-sm leading-7 text-[#71837B]">
+            ایمیل خود را وارد کنید تا لینک ورود امن برایتان ارسال شود.
+          </p>
+
+          <form
+            onSubmit={handleMagicLink}
+            className="mt-7 space-y-4"
+          >
+            <input
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="email@example.com"
+              dir="ltr"
+              className="h-12 w-full rounded-2xl border border-[#DDE7E1] bg-[#FAFCFB] px-4 text-sm outline-none focus:border-[#C9A227] focus:bg-white"
+            />
+
+            {authError && (
+              <div className="rounded-2xl border border-[#E6D8C8] bg-[#FFF9F2] px-4 py-3 text-xs leading-6 text-[#8A6425]">
+                {authError}
+              </div>
+            )}
+
+            {authMessage && (
+              <div className="rounded-2xl border border-[#CDE3D7] bg-[#EEF8F2] px-4 py-3 text-xs leading-6 text-[#2E725C]">
+                {authMessage}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={authSending}
+              className="h-12 w-full rounded-2xl bg-[#173C32] px-5 text-sm font-bold text-white disabled:opacity-60"
+            >
+              {authSending
+                ? "در حال ارسال..."
+                : "ارسال لینک ورود"}
+            </button>
+          </form>
+
+          <Link
+            href="/gold"
+            className="mt-5 flex justify-center text-sm font-bold text-[#A27A17] hover:underline"
+          >
+            بازگشت به سایت
+          </Link>
+        </div>
+      </main>
+    );
+  }
+
+  if (!shop) {
+    return (
+      <main
+        dir="rtl"
+        className="min-h-screen bg-[#F4F8F6] px-4 py-10 text-[#173C32]"
+      >
+        <div className="mx-auto max-w-2xl rounded-[30px] border border-[#DDE7E1] bg-white p-6 shadow-sm md:p-8">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <div className="text-xs font-medium text-[#9A7518]">
+                راه‌اندازی فروشگاه
+              </div>
+              <h1 className="mt-2 text-2xl font-extrabold">
+                فروشگاهت را ثبت کن
+              </h1>
+              <p className="mt-2 text-sm leading-7 text-[#71837B]">
+                برای شروع، اطلاعات پایه فروشگاه را ثبت کن.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => void supabase.auth.signOut()}
+              className="rounded-xl border border-[#DDE7E1] px-4 py-2 text-xs font-bold text-[#50695F]"
+            >
+              خروج
+            </button>
+          </div>
+
+          <form
+            onSubmit={handleCreateShop}
+            className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2"
+          >
+            <div className="md:col-span-2">
+              <label className="mb-2 block text-sm font-bold">
+                نام فروشگاه
+              </label>
+              <input
+                value={onboarding.shopName}
+                onChange={(event) =>
+                  setOnboarding({
+                    ...onboarding,
+                    shopName: event.target.value,
+                  })
+                }
+                placeholder="مثلاً گالری طلای آریا"
+                className="h-12 w-full rounded-xl border border-[#DDE7E1] bg-[#FAFCFB] px-4 text-sm outline-none focus:border-[#C9A227] focus:bg-white"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-bold">
+                شهر
+              </label>
+              <input
+                value={onboarding.city}
+                onChange={(event) =>
+                  setOnboarding({
+                    ...onboarding,
+                    city: event.target.value,
+                  })
+                }
+                placeholder="مثلاً ارومیه"
+                className="h-12 w-full rounded-xl border border-[#DDE7E1] bg-[#FAFCFB] px-4 text-sm outline-none focus:border-[#C9A227] focus:bg-white"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-bold">
+                تلفن
+              </label>
+              <input
+                value={onboarding.phone}
+                onChange={(event) =>
+                  setOnboarding({
+                    ...onboarding,
+                    phone: event.target.value,
+                  })
+                }
+                placeholder="044..."
+                dir="ltr"
+                className="h-12 w-full rounded-xl border border-[#DDE7E1] bg-[#FAFCFB] px-4 text-sm outline-none focus:border-[#C9A227] focus:bg-white"
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="mb-2 block text-sm font-bold">
+                اینستاگرام
+              </label>
+              <input
+                value={onboarding.instagram}
+                onChange={(event) =>
+                  setOnboarding({
+                    ...onboarding,
+                    instagram: event.target.value.replace(/^@/, ""),
+                  })
+                }
+                placeholder="example_gold"
+                dir="ltr"
+                className="h-12 w-full rounded-xl border border-[#DDE7E1] bg-[#FAFCFB] px-4 text-sm outline-none focus:border-[#C9A227] focus:bg-white"
+              />
+            </div>
+
+            {onboardingError && (
+              <div className="md:col-span-2 rounded-2xl border border-[#E6D8C8] bg-[#FFF9F2] px-4 py-3 text-sm text-[#8A6425]">
+                {onboardingError}
+              </div>
+            )}
+
+            <div className="md:col-span-2 flex justify-end">
+              <button
+                type="submit"
+                disabled={onboardingSaving}
+                className="rounded-xl bg-[#173C32] px-6 py-3.5 text-sm font-bold text-white disabled:opacity-60"
+              >
+                {onboardingSaving
+                  ? "در حال ثبت..."
+                  : "ساخت فروشگاه"}
+              </button>
+            </div>
+          </form>
+        </div>
+      </main>
+    );
+  }
+
+  return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (session && shop) {
+      void loadAnalytics();
+    }
+  }, [session, shop, timeRange]);
+
+  const handleMagicLink = async (
+    event: React.FormEvent<HTMLFormElement>
+  ) => {
+    event.preventDefault();
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!normalizedEmail || !normalizedEmail.includes("@")) {
+      setAuthError("یک ایمیل معتبر وارد کنید.");
+      return;
+    }
+
+    setAuthSending(true);
+    setAuthError("");
+
+    const { error } = await supabase.auth.signInWithOtp({
+      email: normalizedEmail,
+      options: {
+        emailRedirectTo:
+          window.location.origin + "/seller",
+      },
+    });
+
+    if (error) {
+      setAuthError(error.message);
+    } else {
+      setAuthMessage(
+        "لینک ورود به ایمیل شما ارسال شد. بعد از کلیک روی لینک به پنل برمی‌گردید."
+      );
+    }
+
+    setAuthSending(false);
+  };
+
+  const handleCreateShop = async (
+    event: React.FormEvent<HTMLFormElement>
+  ) => {
+    event.preventDefault();
+
+    if (!profile || !onboarding.shopName.trim()) {
+      setOnboardingError("نام فروشگاه را وارد کنید.");
+      return;
+    }
+
+    setOnboardingSaving(true);
+    setOnboardingError("");
+
+    const { data, error } = await supabase
+      .from("shops___")
+      .insert({
+        owner_id: profile.id,
+        shop_name: onboarding.shopName.trim(),
+        city: onboarding.city.trim() || null,
+        phone: onboarding.phone.trim() || null,
+        instagram: onboarding.instagram.trim() || null,
+        status: "active",
+      })
+      .select("id,shop_name,city,phone,instagram")
+      .single();
+
+    if (error || !data) {
+      setOnboardingError("ثبت فروشگاه ناموفق بود.");
+    } else {
+      setShop(data);
+    }
+
+    setOnboardingSaving(false);
+  };
+
+  const handleSubmit = async (
+    event: React.FormEvent<HTMLFormElement>
+  ) => {
+    event.preventDefault();
+
+    if (!shop) return;
+
+    if (!form.name.trim()) {
+      setProductError("نام محصول را وارد کنید.");
+      return;
+    }
+
+    const category = categories.find(
+      (item) => item.name === form.category
+    );
+
+    const extraFee = toNumber(form.price);
+
+    const payload = {
+      shop_id: shop.id,
+      category_id: category?.id ?? null,
+      title: form.name.trim(),
+      description: form.description.trim() || null,
+      weight: toNumber(form.weight),
+      karat: toNumber(form.karat) || 18,
+      wage_type: "percent",
+      wage_value: toNumber(form.wage),
+      profit_percent: 0,
+      extra_fee: extraFee,
+      image: "/hero-luxury.jpg",
+      status:
+        form.stock === "موجود"
+          ? "active"
+          : "inactive",
     };
 
-    setProducts((current) => [newProduct, ...current]);
+    setProductsLoading(true);
+    setProductError("");
+
+    const result = editingProductId
+      ? await supabase
+          .from("products")
+          .update(payload)
+          .eq("id", editingProductId)
+          .eq("shop_id", shop.id)
+          .select("id")
+          .single()
+      : await supabase
+          .from("products")
+          .insert(payload)
+          .select("id")
+          .single();
+
+    if (result.error) {
+      setProductError("ذخیره محصول ناموفق بود.");
+      setProductsLoading(false);
+      return;
+    }
+
+    setEditingProductId(null);
     setForm({
       name: "",
-      category: "انگشتر",
+      category: categories[0]?.name ?? "انگشتر",
       weight: "",
-      karat: "۱۸ عیار",
-      wage: "",
+      karat: "18",
+      wage: "8",
       price: "",
       stock: "موجود",
       description: "",
     });
 
+    await loadProducts(shop.id, categories);
+    await loadAnalytics();
+
+    setProductsLoading(false);
     setShowSuccess(true);
 
-    window.setTimeout(() => {
-      setShowSuccess(false);
-    }, 3000);
-  };
-
-  const toggleProductStatus = (id: number) => {
-    setProducts((current) =>
-      current.map((product) =>
-        product.id === id
-          ? {
-              ...product,
-              status:
-                product.status === "فعال" ? "غیرفعال" : "فعال",
-            }
-          : product
-      )
+    window.setTimeout(
+      () => setShowSuccess(false),
+      2500
     );
   };
+
+  const toggleProductStatus = async (id: number) => {
+    if (!shop) return;
+
+    const product = products.find(
+      (item) => item.id === id
+    );
+
+    if (!product) return;
+
+    const { error } = await supabase
+      .from("products")
+      .update({
+        status:
+          product.status === "فعال"
+            ? "inactive"
+            : "active",
+      })
+      .eq("id", product.id)
+      .eq("shop_id", shop.id);
+
+    if (error) {
+      setProductError(
+        "تغییر وضعیت محصول ناموفق بود."
+      );
+      return;
+    }
+
+    await loadProducts(shop.id, categories);
+    await loadAnalytics();
+  };
+
+  const startEdit = (product: Product) => {
+    setEditingProductId(product.id);
+    setForm({
+      name: product.name,
+      category: product.category,
+      weight: product.weight,
+      karat: String(product.karat),
+      wage: String(product.wageValue),
+      price: String(product.extraFee),
+      stock:
+        product.status === "فعال"
+          ? "موجود"
+          : "ناموجود",
+      description: product.description,
+    });
+    setActiveSection("add-product");
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
+
+  const filteredProducts = analyticsProducts;
+  const analyticsTotals = analyticsSummary;
+  const selectedAnalytics = filteredProducts.find(
+    (product) => product.id === selectedProductId
+  );
 
   return (
     <main
@@ -277,7 +870,7 @@ export default function SellerPanelPage() {
 
               <div className="hidden sm:block">
                 <div className="text-sm font-bold">
-                  گالری طلای آریا
+                  {shop.shop_name ?? "فروشگاه شما"}
                 </div>
 
                 <div className="text-[11px] text-[#86948E]">
@@ -492,7 +1085,7 @@ export default function SellerPanelPage() {
 
                 <div>
                   <label className="mb-2 block text-sm font-bold">
-                    قیمت
+                    هزینه اضافه (تومان)
                   </label>
 
                   <input
@@ -503,7 +1096,7 @@ export default function SellerPanelPage() {
                         price: event.target.value,
                       })
                     }
-                    placeholder="مثلاً ۲۳۸٬۴۰۰٬۰۰۰ تومان"
+                    placeholder="مثلاً ۰"
                     className="h-12 w-full rounded-xl border border-[#DDE7E1] bg-[#FAFCFB] px-4 text-sm outline-none transition focus:border-[#C9A227] focus:bg-white"
                   />
                 </div>
@@ -619,6 +1212,7 @@ export default function SellerPanelPage() {
 
                       <button
                         type="button"
+                        onClick={() => startEdit(product)}
                         className="rounded-lg border border-[#DDE7E1] px-3 py-2 text-xs font-bold text-[#426256] transition hover:border-[#C9A227]"
                       >
                         ویرایش
