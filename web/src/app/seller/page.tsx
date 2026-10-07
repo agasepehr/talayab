@@ -645,7 +645,7 @@ if (authChecking) {
       >
         <div className="w-full max-w-md rounded-[30px] border border-[#DDE7E1] bg-white p-6 shadow-[0_20px_70px_rgba(23,60,50,0.08)] md:p-8">
           <div className="text-xs font-medium text-[#9A7518]">
-            پنل فروشندگان طلایاب
+            پنل فروشندگان ویترین‌یاب
           </div>
           <h1 className="mt-2 text-2xl font-extrabold">
             ورود به پنل فروشگاه
@@ -847,11 +847,11 @@ if (authChecking) {
 
             <div className="leading-none">
               <div className="text-lg font-extrabold">
-                طلایاب
+                ویترین‌یاب
               </div>
 
               <div className="mt-1 text-[9px] tracking-[0.3em] text-[#A27A17]">
-                TALAYAB
+                VITRINYAB
               </div>
             </div>
           </Link>

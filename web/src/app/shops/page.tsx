@@ -64,7 +64,7 @@ export default function ShopsPage() {
             city: shop.city ?? "—",
             description:
               shop.description ??
-              "فروشگاه فعال در شبکه طلایاب.",
+              "فروشگاه فعال در شبکه ویترین‌یاب.",
             productCount: countMap.get(shop.id) ?? 0,
           }))
         );
@@ -87,8 +87,8 @@ export default function ShopsPage() {
               <span className="text-lg font-semibold">ط</span>
             </div>
             <div className="leading-none">
-              <div className="text-lg font-extrabold">طلایاب</div>
-              <div className="mt-1 text-[9px] tracking-[0.28em] text-[#9A7418]">TALAYAB</div>
+              <div className="text-lg font-extrabold">ویترین‌یاب</div>
+              <div className="mt-1 text-[9px] tracking-[0.28em] text-[#9A7418]">VITRINYAB</div>
             </div>
           </Link>
           <nav className="hidden items-center gap-8 text-sm font-medium text-[#31584D] md:flex">
@@ -104,10 +104,10 @@ export default function ShopsPage() {
 
       <section className="mx-auto w-[92%] max-w-[1440px] py-10 md:py-14">
         <div className="mb-8">
-          <div className="mb-3 text-sm font-medium text-[#B28A1E]">TALAYAB</div>
+          <div className="mb-3 text-sm font-medium text-[#B28A1E]">VITRINYAB</div>
           <h1 className="text-3xl font-extrabold tracking-tight md:text-4xl">فروشگاه‌های طلا</h1>
           <p className="mt-3 max-w-2xl text-sm leading-7 text-[#64766F] md:text-base">
-            فروشگاه‌های فعال طلایاب را ببینید، محصولاتشان را مقایسه کنید و مستقیماً با فروشگاه موردنظر ارتباط بگیرید.
+            فروشگاه‌های فعال ویترین‌یاب را ببینید، محصولاتشان را مقایسه کنید و مستقیماً با فروشگاه موردنظر ارتباط بگیرید.
           </p>
         </div>
 
