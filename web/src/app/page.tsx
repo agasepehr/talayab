@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 "use client";
 
 export default function Home() {
@@ -49,12 +51,12 @@ export default function Home() {
               مجله
             </a>
 
-            <a
-              href="#"
+            <Link
+              href="/shops"
               className="transition hover:text-[#b8893d]"
             >
               فروشگاه‌ها
-            </a>
+            </Link>
 
             <a
               href="/gold"
@@ -159,8 +161,8 @@ export default function Home() {
           </p>
 
           {/* CTA */}
-          <button
-            type="button"
+          <Link
+            href="/gold"
             className="mt-[5%] flex w-[55%] items-center justify-between rounded-full bg-[#063b30] px-[5%] py-[3%] text-[1.2vw] text-white transition hover:bg-[#0a4a3c]"
           >
             <span>
@@ -170,7 +172,7 @@ export default function Home() {
             <span className="text-[#d3a85a]">
               ←
             </span>
-          </button>
+          </Link>
 
         </div>
 

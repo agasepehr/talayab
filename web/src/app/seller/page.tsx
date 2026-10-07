@@ -858,10 +858,10 @@ if (authChecking) {
 
           <div className="flex items-center gap-3">
             <Link
-              href="/gold"
+              href={"/shop/" + shop.id}
               className="hidden rounded-xl border border-[#DDE7E1] px-4 py-2.5 text-sm font-bold text-[#416055] transition hover:border-[#C9A227] sm:block"
             >
-              مشاهده سایت
+              مشاهده فروشگاه
             </Link>
 
             <div className="flex items-center gap-3 rounded-full border border-[#DDE7E1] bg-white px-3 py-2">
