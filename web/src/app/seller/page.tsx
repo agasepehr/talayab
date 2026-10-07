@@ -619,6 +619,214 @@ export default function SellerPanelPage() {
     (product) => product.id === selectedProductId
   );
 
+if (authChecking) {
+    return (
+      <main
+        dir="rtl"
+        className="flex min-h-screen items-center justify-center bg-[#F4F8F6] text-[#173C32]"
+      >
+        <div className="rounded-3xl border border-[#DDE7E1] bg-white px-8 py-10 text-center shadow-sm">
+          <div className="text-lg font-extrabold">
+            در حال بررسی حساب فروشنده...
+          </div>
+          <div className="mt-2 text-sm text-[#7A8B83]">
+            لطفاً چند لحظه صبر کنید.
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  if (!session) {
+    return (
+      <main
+        dir="rtl"
+        className="flex min-h-screen items-center justify-center bg-[#F4F8F6] px-4 py-10 text-[#173C32]"
+      >
+        <div className="w-full max-w-md rounded-[30px] border border-[#DDE7E1] bg-white p-6 shadow-[0_20px_70px_rgba(23,60,50,0.08)] md:p-8">
+          <div className="text-xs font-medium text-[#9A7518]">
+            پنل فروشندگان طلایاب
+          </div>
+          <h1 className="mt-2 text-2xl font-extrabold">
+            ورود به پنل فروشگاه
+          </h1>
+          <p className="mt-3 text-sm leading-7 text-[#71837B]">
+            ایمیل خود را وارد کنید تا لینک ورود امن برایتان ارسال شود.
+          </p>
+
+          <form
+            onSubmit={handleMagicLink}
+            className="mt-7 space-y-4"
+          >
+            <input
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="email@example.com"
+              dir="ltr"
+              className="h-12 w-full rounded-2xl border border-[#DDE7E1] bg-[#FAFCFB] px-4 text-sm outline-none focus:border-[#C9A227] focus:bg-white"
+            />
+
+            {authError && (
+              <div className="rounded-2xl border border-[#E6D8C8] bg-[#FFF9F2] px-4 py-3 text-xs leading-6 text-[#8A6425]">
+                {authError}
+              </div>
+            )}
+
+            {authMessage && (
+              <div className="rounded-2xl border border-[#CDE3D7] bg-[#EEF8F2] px-4 py-3 text-xs leading-6 text-[#2E725C]">
+                {authMessage}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={authSending}
+              className="h-12 w-full rounded-2xl bg-[#173C32] px-5 text-sm font-bold text-white disabled:opacity-60"
+            >
+              {authSending
+                ? "در حال ارسال..."
+                : "ارسال لینک ورود"}
+            </button>
+          </form>
+
+          <Link
+            href="/gold"
+            className="mt-5 flex justify-center text-sm font-bold text-[#A27A17] hover:underline"
+          >
+            بازگشت به سایت
+          </Link>
+        </div>
+      </main>
+    );
+  }
+
+  if (!shop) {
+    return (
+      <main
+        dir="rtl"
+        className="min-h-screen bg-[#F4F8F6] px-4 py-10 text-[#173C32]"
+      >
+        <div className="mx-auto max-w-2xl rounded-[30px] border border-[#DDE7E1] bg-white p-6 shadow-sm md:p-8">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <div className="text-xs font-medium text-[#9A7518]">
+                راه‌اندازی فروشگاه
+              </div>
+              <h1 className="mt-2 text-2xl font-extrabold">
+                فروشگاهت را ثبت کن
+              </h1>
+              <p className="mt-2 text-sm leading-7 text-[#71837B]">
+                برای شروع، اطلاعات پایه فروشگاه را ثبت کن.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => void supabase.auth.signOut()}
+              className="rounded-xl border border-[#DDE7E1] px-4 py-2 text-xs font-bold text-[#50695F]"
+            >
+              خروج
+            </button>
+          </div>
+
+          <form
+            onSubmit={handleCreateShop}
+            className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2"
+          >
+            <div className="md:col-span-2">
+              <label className="mb-2 block text-sm font-bold">
+                نام فروشگاه
+              </label>
+              <input
+                value={onboarding.shopName}
+                onChange={(event) =>
+                  setOnboarding({
+                    ...onboarding,
+                    shopName: event.target.value,
+                  })
+                }
+                placeholder="مثلاً گالری طلای آریا"
+                className="h-12 w-full rounded-xl border border-[#DDE7E1] bg-[#FAFCFB] px-4 text-sm outline-none focus:border-[#C9A227] focus:bg-white"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-bold">
+                شهر
+              </label>
+              <input
+                value={onboarding.city}
+                onChange={(event) =>
+                  setOnboarding({
+                    ...onboarding,
+                    city: event.target.value,
+                  })
+                }
+                placeholder="مثلاً ارومیه"
+                className="h-12 w-full rounded-xl border border-[#DDE7E1] bg-[#FAFCFB] px-4 text-sm outline-none focus:border-[#C9A227] focus:bg-white"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-bold">
+                تلفن
+              </label>
+              <input
+                value={onboarding.phone}
+                onChange={(event) =>
+                  setOnboarding({
+                    ...onboarding,
+                    phone: event.target.value,
+                  })
+                }
+                placeholder="044..."
+                dir="ltr"
+                className="h-12 w-full rounded-xl border border-[#DDE7E1] bg-[#FAFCFB] px-4 text-sm outline-none focus:border-[#C9A227] focus:bg-white"
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="mb-2 block text-sm font-bold">
+                اینستاگرام
+              </label>
+              <input
+                value={onboarding.instagram}
+                onChange={(event) =>
+                  setOnboarding({
+                    ...onboarding,
+                    instagram: event.target.value.replace(/^@/, ""),
+                  })
+                }
+                placeholder="example_gold"
+                dir="ltr"
+                className="h-12 w-full rounded-xl border border-[#DDE7E1] bg-[#FAFCFB] px-4 text-sm outline-none focus:border-[#C9A227] focus:bg-white"
+              />
+            </div>
+
+            {onboardingError && (
+              <div className="md:col-span-2 rounded-2xl border border-[#E6D8C8] bg-[#FFF9F2] px-4 py-3 text-sm text-[#8A6425]">
+                {onboardingError}
+              </div>
+            )}
+
+            <div className="md:col-span-2 flex justify-end">
+              <button
+                type="submit"
+                disabled={onboardingSaving}
+                className="rounded-xl bg-[#173C32] px-6 py-3.5 text-sm font-bold text-white disabled:opacity-60"
+              >
+                {onboardingSaving
+                  ? "در حال ثبت..."
+                  : "ساخت فروشگاه"}
+              </button>
+            </div>
+          </form>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main
       dir="rtl"
@@ -1240,214 +1448,7 @@ export default function SellerPanelPage() {
                       const isSelected =
                         selectedProductId === product.id;
 
-                      if (authChecking) {
-    return (
-      <main
-        dir="rtl"
-        className="flex min-h-screen items-center justify-center bg-[#F4F8F6] text-[#173C32]"
-      >
-        <div className="rounded-3xl border border-[#DDE7E1] bg-white px-8 py-10 text-center shadow-sm">
-          <div className="text-lg font-extrabold">
-            در حال بررسی حساب فروشنده...
-          </div>
-          <div className="mt-2 text-sm text-[#7A8B83]">
-            لطفاً چند لحظه صبر کنید.
-          </div>
-        </div>
-      </main>
-    );
-  }
-
-  if (!session) {
-    return (
-      <main
-        dir="rtl"
-        className="flex min-h-screen items-center justify-center bg-[#F4F8F6] px-4 py-10 text-[#173C32]"
-      >
-        <div className="w-full max-w-md rounded-[30px] border border-[#DDE7E1] bg-white p-6 shadow-[0_20px_70px_rgba(23,60,50,0.08)] md:p-8">
-          <div className="text-xs font-medium text-[#9A7518]">
-            پنل فروشندگان طلایاب
-          </div>
-          <h1 className="mt-2 text-2xl font-extrabold">
-            ورود به پنل فروشگاه
-          </h1>
-          <p className="mt-3 text-sm leading-7 text-[#71837B]">
-            ایمیل خود را وارد کنید تا لینک ورود امن برایتان ارسال شود.
-          </p>
-
-          <form
-            onSubmit={handleMagicLink}
-            className="mt-7 space-y-4"
-          >
-            <input
-              type="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              placeholder="email@example.com"
-              dir="ltr"
-              className="h-12 w-full rounded-2xl border border-[#DDE7E1] bg-[#FAFCFB] px-4 text-sm outline-none focus:border-[#C9A227] focus:bg-white"
-            />
-
-            {authError && (
-              <div className="rounded-2xl border border-[#E6D8C8] bg-[#FFF9F2] px-4 py-3 text-xs leading-6 text-[#8A6425]">
-                {authError}
-              </div>
-            )}
-
-            {authMessage && (
-              <div className="rounded-2xl border border-[#CDE3D7] bg-[#EEF8F2] px-4 py-3 text-xs leading-6 text-[#2E725C]">
-                {authMessage}
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={authSending}
-              className="h-12 w-full rounded-2xl bg-[#173C32] px-5 text-sm font-bold text-white disabled:opacity-60"
-            >
-              {authSending
-                ? "در حال ارسال..."
-                : "ارسال لینک ورود"}
-            </button>
-          </form>
-
-          <Link
-            href="/gold"
-            className="mt-5 flex justify-center text-sm font-bold text-[#A27A17] hover:underline"
-          >
-            بازگشت به سایت
-          </Link>
-        </div>
-      </main>
-    );
-  }
-
-  if (!shop) {
-    return (
-      <main
-        dir="rtl"
-        className="min-h-screen bg-[#F4F8F6] px-4 py-10 text-[#173C32]"
-      >
-        <div className="mx-auto max-w-2xl rounded-[30px] border border-[#DDE7E1] bg-white p-6 shadow-sm md:p-8">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <div className="text-xs font-medium text-[#9A7518]">
-                راه‌اندازی فروشگاه
-              </div>
-              <h1 className="mt-2 text-2xl font-extrabold">
-                فروشگاهت را ثبت کن
-              </h1>
-              <p className="mt-2 text-sm leading-7 text-[#71837B]">
-                برای شروع، اطلاعات پایه فروشگاه را ثبت کن.
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => void supabase.auth.signOut()}
-              className="rounded-xl border border-[#DDE7E1] px-4 py-2 text-xs font-bold text-[#50695F]"
-            >
-              خروج
-            </button>
-          </div>
-
-          <form
-            onSubmit={handleCreateShop}
-            className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2"
-          >
-            <div className="md:col-span-2">
-              <label className="mb-2 block text-sm font-bold">
-                نام فروشگاه
-              </label>
-              <input
-                value={onboarding.shopName}
-                onChange={(event) =>
-                  setOnboarding({
-                    ...onboarding,
-                    shopName: event.target.value,
-                  })
-                }
-                placeholder="مثلاً گالری طلای آریا"
-                className="h-12 w-full rounded-xl border border-[#DDE7E1] bg-[#FAFCFB] px-4 text-sm outline-none focus:border-[#C9A227] focus:bg-white"
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-bold">
-                شهر
-              </label>
-              <input
-                value={onboarding.city}
-                onChange={(event) =>
-                  setOnboarding({
-                    ...onboarding,
-                    city: event.target.value,
-                  })
-                }
-                placeholder="مثلاً ارومیه"
-                className="h-12 w-full rounded-xl border border-[#DDE7E1] bg-[#FAFCFB] px-4 text-sm outline-none focus:border-[#C9A227] focus:bg-white"
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-bold">
-                تلفن
-              </label>
-              <input
-                value={onboarding.phone}
-                onChange={(event) =>
-                  setOnboarding({
-                    ...onboarding,
-                    phone: event.target.value,
-                  })
-                }
-                placeholder="044..."
-                dir="ltr"
-                className="h-12 w-full rounded-xl border border-[#DDE7E1] bg-[#FAFCFB] px-4 text-sm outline-none focus:border-[#C9A227] focus:bg-white"
-              />
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="mb-2 block text-sm font-bold">
-                اینستاگرام
-              </label>
-              <input
-                value={onboarding.instagram}
-                onChange={(event) =>
-                  setOnboarding({
-                    ...onboarding,
-                    instagram: event.target.value.replace(/^@/, ""),
-                  })
-                }
-                placeholder="example_gold"
-                dir="ltr"
-                className="h-12 w-full rounded-xl border border-[#DDE7E1] bg-[#FAFCFB] px-4 text-sm outline-none focus:border-[#C9A227] focus:bg-white"
-              />
-            </div>
-
-            {onboardingError && (
-              <div className="md:col-span-2 rounded-2xl border border-[#E6D8C8] bg-[#FFF9F2] px-4 py-3 text-sm text-[#8A6425]">
-                {onboardingError}
-              </div>
-            )}
-
-            <div className="md:col-span-2 flex justify-end">
-              <button
-                type="submit"
-                disabled={onboardingSaving}
-                className="rounded-xl bg-[#173C32] px-6 py-3.5 text-sm font-bold text-white disabled:opacity-60"
-              >
-                {onboardingSaving
-                  ? "در حال ثبت..."
-                  : "ساخت فروشگاه"}
-              </button>
-            </div>
-          </form>
-        </div>
-      </main>
-    );
-  }
-
+                      
   return (
                         <tr
                           key={product.id}
