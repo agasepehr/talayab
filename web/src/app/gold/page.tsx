@@ -245,7 +245,7 @@ export default function GoldPage() {
             </Link>
 
             <Link
-              href="#shops"
+              href="/shops"
               className="transition hover:text-[#B28A1E]"
             >
               فروشگاه‌ها
@@ -428,9 +428,13 @@ export default function GoldPage() {
                         فروشگاه
                       </div>
 
-                      <div className="mt-1 text-sm font-semibold text-[#31584D]">
-                        {product.shop}
-                      </div>
+                      <Link
+                href={"/shop/" + product.shopId}
+                className="mt-1 block text-sm font-semibold text-[#31584D] hover:text-[#A57D18] hover:underline"
+                onClick={(event) => event.stopPropagation()}
+              >
+                {product.shop}
+              </Link>
                     </div>
 
                     <span className="flex h-10 w-10 items-center justify-center rounded-full border border-[#DCE7E1] text-[#B28A1E] transition group-hover:border-[#C9A227] group-hover:bg-[#FBF8EE]">

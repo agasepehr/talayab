@@ -376,7 +376,7 @@ export default function ProductPage() {
             </Link>
 
             <Link
-              href="/gold"
+              href="/shops"
               className="text-[#426256] transition hover:text-[#B28A1E]"
             >
               فروشگاه‌ها
@@ -748,9 +748,12 @@ export default function ProductPage() {
             <div className="mt-4 rounded-[26px] border border-[#DDE8E1] bg-white p-5 md:p-7">
               <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                  <div className="text-2xl font-extrabold text-[#173C32]">
+                  <Link
+                    href={"/shop/" + product.shop.id}
+                    className="block text-2xl font-extrabold text-[#173C32] hover:text-[#A57D18] hover:underline"
+                  >
                     {product.shop.name}
-                  </div>
+                  </Link>
 
                   <div className="mt-2 text-sm text-[#71837B]">
                     {product.shop.city} · {product.shop.address}
