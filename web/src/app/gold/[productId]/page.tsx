@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { trackEvent } from "../../../lib/analytics";
 
 const product = {
   id: 1,
@@ -60,6 +61,14 @@ const relatedProducts = [
 
 export default function ProductPage() {
   const [selectedImage, setSelectedImage] = useState(0);
+
+  useEffect(() => {
+    void trackEvent({
+      eventType: "product_view",
+      shopId: 1,
+      productId: product.id,
+    });
+  }, []);
   const [viewerOpen, setViewerOpen] = useState(false);
 
   const nextImage = () => {
@@ -498,6 +507,13 @@ export default function ProductPage() {
                 <div className="flex flex-wrap gap-3">
                   <a
                     href={`tel:${product.shop.phone}`}
+                    onClick={() => {
+                      void trackEvent({
+                        eventType: "contact_click",
+                        shopId: 1,
+                        productId: product.id,
+                      });
+                    }}
                     className="rounded-xl bg-[#173C32] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#245747]"
                   >
                     تماس با فروشگاه
@@ -505,6 +521,13 @@ export default function ProductPage() {
 
                   <a
                     href={`https://instagram.com/${product.shop.instagram}`}
+                    onClick={() => {
+                      void trackEvent({
+                        eventType: "instagram_click",
+                        shopId: 1,
+                        productId: product.id,
+                      });
+                    }}
                     target="_blank"
                     rel="noreferrer"
                     className="rounded-xl border border-[#DDE8E1] bg-white px-5 py-3 text-sm font-bold text-[#31584D] transition hover:border-[#C9A227]"
@@ -530,6 +553,13 @@ export default function ProductPage() {
                         href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
                           product.shop.address
                         )}`}
+                        onClick={() => {
+                          void trackEvent({
+                            eventType: "map_click",
+                            shopId: 1,
+                            productId: product.id,
+                          });
+                        }}
                         target="_blank"
                         rel="noreferrer"
                         className="text-sm font-bold text-[#A57D18] hover:underline"
