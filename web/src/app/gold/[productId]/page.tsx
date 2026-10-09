@@ -351,11 +351,11 @@ export default function ProductPage() {
 
             <div className="leading-none">
               <div className="text-lg font-extrabold text-[#173C32]">
-                ویترین‌یاب
+                طلاخونه
               </div>
 
               <div className="mt-1 text-[9px] tracking-[0.28em] text-[#A27A17]">
-                VITRINYAB
+                TALAKHUNEH
               </div>
             </div>
           </Link>
@@ -528,7 +528,7 @@ export default function ProductPage() {
                 </div>
 
                 <div className="mt-1 text-sm font-semibold text-[#31584D]">
-                  قیمت زنده از بازار ویترین‌یاب
+                  قیمت زنده از بازار طلاخونه
                 </div>
               </div>
             </div>
