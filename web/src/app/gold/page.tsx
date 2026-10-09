@@ -220,10 +220,10 @@ export default function GoldPage() {
 
             <div className="leading-none">
               <div className="text-lg font-extrabold tracking-tight text-[#173C32]">
-                ویترین‌یاب
+                طلاخونه
               </div>
               <div className="mt-1 text-[9px] tracking-[0.28em] text-[#9A7418]">
-                VITRINYAB
+                TALAKHUNEH
               </div>
             </div>
           </Link>
@@ -282,7 +282,7 @@ export default function GoldPage() {
         {/* Page heading */}
         <div className="mb-8">
           <div className="mb-3 text-sm font-medium text-[#B28A1E]">
-            VITRINYAB
+            TALAKHUNEH
           </div>
 
           <h1 className="text-3xl font-extrabold tracking-tight text-[#173C32] md:text-4xl">
@@ -358,7 +358,7 @@ export default function GoldPage() {
               در حال دریافت محصولات...
             </div>
             <p className="mt-2 text-sm text-[#7B8C84]">
-              اطلاعات از فروشگاه‌های فعال ویترین‌یاب دریافت می‌شود.
+              اطلاعات از فروشگاه‌های فعال طلاخونه دریافت می‌شود.
             </p>
           </div>
         ) : errorMessage ? (
