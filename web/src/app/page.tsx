@@ -14,7 +14,7 @@ export default function Home() {
         {/* Background */}
         <img
           src="/hero-luxury.jpg"
-          alt="ویترین‌یاب"
+          alt="طلاخونه"
           className="absolute inset-0 h-full w-full object-cover"
         />
 
@@ -25,11 +25,12 @@ export default function Home() {
 
           {/* Logo */}
           <div className="w-[14%] shrink-0">
-            <img
-              src="/logo.png"
-              alt="VitrinYab"
-              className="w-full"
-            />
+            <div
+              dir="rtl"
+              className="text-[2vw] font-extrabold tracking-tight text-[#073b31]"
+            >
+              طلاخونه
+            </div>
           </div>
 
           {/* Menu */}
@@ -130,7 +131,7 @@ export default function Home() {
           className="absolute left-[10%] top-[24%] z-10 w-[38%]"
         >
 
-          {/* VITRINYAB */}
+          {/* TALAKHUNEH */}
           <div
             dir="ltr"
             className="mb-[4%] flex items-center gap-5 text-[1vw] tracking-[0.5em] text-[#073b31]"
