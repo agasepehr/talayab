@@ -141,7 +141,7 @@ export default function ShopPage() {
           id: shopRow.id,
           shopName: shopRow.shop_name ?? "فروشگاه طلا",
           city: shopRow.city ?? "—",
-          description: shopRow.description ?? "این فروشگاه یکی از فروشگاه‌های فعال ویترین‌یاب است.",
+          description: shopRow.description ?? "این فروشگاه یکی از فروشگاه‌های فعال طلاخونه است.",
           phone: shopRow.phone ?? "",
           instagram: shopRow.instagram ?? "",
           latitude: shopRow.latitude,
@@ -170,7 +170,7 @@ export default function ShopPage() {
       <main dir="rtl" className="flex min-h-screen items-center justify-center bg-[#F4F8F6] text-[#173C32]">
         <div className="rounded-3xl border border-[#DDE7E1] bg-white px-8 py-10 text-center shadow-sm">
           <div className="text-lg font-extrabold">در حال بارگذاری فروشگاه...</div>
-          <div className="mt-2 text-sm text-[#7A8B83]">اطلاعات فروشگاه از ویترین‌یاب دریافت می‌شود.</div>
+          <div className="mt-2 text-sm text-[#7A8B83]">اطلاعات فروشگاه از طلاخونه دریافت می‌شود.</div>
         </div>
       </main>
     );
@@ -194,8 +194,8 @@ export default function ShopPage() {
           <Link href="/" className="flex items-center gap-2">
             <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#C9A227] text-[#C9A227]"><span className="text-lg font-bold">ط</span></div>
             <div className="leading-none">
-              <div className="text-lg font-extrabold">ویترین‌یاب</div>
-              <div className="mt-1 text-[9px] tracking-[0.28em] text-[#A27A17]">VITRINYAB</div>
+              <div className="text-lg font-extrabold">طلاخونه</div>
+              <div className="mt-1 text-[9px] tracking-[0.28em] text-[#A27A17]">TALAKHUNEH</div>
             </div>
           </Link>
           <nav className="hidden items-center gap-8 text-sm font-medium md:flex">
@@ -248,7 +248,7 @@ export default function ShopPage() {
           <div className="flex items-end justify-between gap-4">
             <div>
               <h2 className="text-xl font-extrabold md:text-2xl">محصولات این فروشگاه</h2>
-              <p className="mt-2 text-sm text-[#71837B]">قیمت‌ها بر اساس قیمت فعلی طلای ۱۸ عیار ویترین‌یاب محاسبه می‌شوند.</p>
+              <p className="mt-2 text-sm text-[#71837B]">قیمت‌ها بر اساس قیمت فعلی طلای ۱۸ عیار طلاخونه محاسبه می‌شوند.</p>
             </div>
             <Link href="/gold" className="text-sm font-bold text-[#A27A17] hover:underline">همه طلاها</Link>
           </div>
