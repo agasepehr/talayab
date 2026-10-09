@@ -236,7 +236,7 @@ export default function AdminMarketPage() {
               href="/"
               className="font-extrabold text-[#173C32]"
             >
-              ویترین‌یاب
+              طلاخونه
             </Link>
 
             <Link
@@ -250,7 +250,7 @@ export default function AdminMarketPage() {
           <div className="grid gap-6 lg:grid-cols-[1.05fr_.95fr]">
             <section className="rounded-3xl bg-[#173C32] p-8 text-white shadow-[0_24px_70px_rgba(23,60,50,0.16)]">
               <div className="text-sm font-bold text-[#D3A85A]">
-                VITRINYAB ADMIN
+                TALAKHUNEH ADMIN
               </div>
 
               <h1 className="mt-4 text-3xl font-extrabold leading-tight">
@@ -324,7 +324,7 @@ export default function AdminMarketPage() {
         <div className="mx-auto flex h-20 w-[92%] max-w-[1440px] items-center justify-between">
           <div>
             <div className="text-xs font-bold tracking-[0.2em] text-[#A27B17]">
-              VITRINYAB ADMIN
+              TALAKHUNEH ADMIN
             </div>
             <div className="mt-1 text-lg font-extrabold text-[#173C32]">
               مدیریت قیمت بازار
@@ -360,7 +360,7 @@ export default function AdminMarketPage() {
               وضعیت قیمت طلای ۱۸ عیار
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-7 text-[#6E7F77]">
-              قیمت محصولات ویترین‌یاب از این نرخ پایه محاسبه می‌شود.
+              قیمت محصولات طلاخونه از این نرخ پایه محاسبه می‌شود.
             </p>
           </div>
 
