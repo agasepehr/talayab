@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ویترین‌یاب | VITRINYAB",
+  title: "طلاخونه | TALAKHUNEH",
   description: "جستجو، مقایسه و ارتباط مستقیم با فروشگاه‌های طلا",
 };
 
