@@ -136,7 +136,7 @@ export default function Home() {
             dir="ltr"
             className="mb-[4%] flex items-center gap-5 text-[1vw] tracking-[0.5em] text-[#073b31]"
           >
-            <span>V I T R I N Y A B</span>
+            <span>T A L A K H U N E H</span>
 
             <span className="h-[1px] w-20 bg-[#b8893d]" />
           </div>
