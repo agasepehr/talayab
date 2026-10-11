@@ -36,6 +36,14 @@ type AnalyticsProduct = {
   mapClicks: number;
   instagramClicks: number;
   listImpressions: number;
+  storePageViews: number;
+};
+
+type SellerProfile = {
+  id: number;
+  full_name: string | null;
+  email: string | null;
+  auth_user_id: string | null;
 };
 
 type AnalyticsSummary = {
@@ -90,7 +98,7 @@ export default function SellerPanelPage() {
   const [authSending, setAuthSending] = useState(false);
   const [authMessage, setAuthMessage] = useState("");
   const [authError, setAuthError] = useState("");
-  const [profile, setProfile] = useState<{ id: number; full_name: string | null; email: string | null } | null>(null);
+  const [profile, setProfile] = useState<SellerProfile | null>(null);
   const [shop, setShop] = useState<{ id: number; shop_name: string | null; city: string | null; phone: string | null; instagram: string | null } | null>(null);
   const [onboarding, setOnboarding] = useState({
     shopName: "",
@@ -253,6 +261,7 @@ export default function SellerPanelPage() {
       mapClicks: Number(row.map_clicks ?? 0),
       instagramClicks: Number(row.instagram_clicks ?? 0),
       listImpressions: Number(row.list_impressions ?? 0),
+      storePageViews: Number(row.store_page_views ?? 0),
     }));
 
     setAnalyticsProducts(mapped);
@@ -285,7 +294,8 @@ export default function SellerPanelPage() {
       return;
     }
 
-    let nextProfile = foundUser;
+    let nextProfile: SellerProfile | null =
+      (foundUser as SellerProfile | null);
 
     if (!nextProfile) {
       const { data: createdUser, error: createError } = await supabase
@@ -298,7 +308,7 @@ export default function SellerPanelPage() {
           role: "seller",
           auth_user_id: currentSession.user.id,
         })
-        .select("id,full_name,email")
+        .select("id,full_name,email,auth_user_id")
         .single();
 
       if (createError || !createdUser) {
@@ -307,7 +317,7 @@ export default function SellerPanelPage() {
         return;
       }
 
-      nextProfile = createdUser;
+      nextProfile = createdUser as SellerProfile;
     } else {
       const authId = (
         nextProfile as { auth_user_id?: string | null }
@@ -325,6 +335,12 @@ export default function SellerPanelPage() {
           return;
         }
       }
+    }
+
+    if (!nextProfile) {
+      setAuthError("اطلاعات حساب فروشنده کامل نیست.");
+      setAuthChecking(false);
+      return;
     }
 
     setProfile(nextProfile);
