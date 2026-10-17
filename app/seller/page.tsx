@@ -44,6 +44,7 @@ type SellerProfile = {
   full_name: string | null;
   email: string | null;
   auth_user_id: string | null;
+  role: string | null;
 };
 
 type AnalyticsSummary = {
@@ -287,7 +288,7 @@ export default function SellerPanelPage() {
 
     const { data: foundUser, error: userError } = await supabase
       .from("users")
-      .select("id,full_name,email,auth_user_id")
+      .select("id,full_name,email,auth_user_id,role")
       .eq("email", currentEmail)
       .maybeSingle();
 
@@ -300,6 +301,12 @@ export default function SellerPanelPage() {
     let nextProfile: SellerProfile | null =
       (foundUser as SellerProfile | null);
 
+    if (nextProfile && nextProfile.role !== "seller") {
+      setAuthError("این حساب دسترسی پنل فروشنده را ندارد.");
+      setAuthChecking(false);
+      return;
+    }
+
     if (!nextProfile) {
       const { data: createdUser, error: createError } = await supabase
         .from("users")
@@ -311,7 +318,7 @@ export default function SellerPanelPage() {
           role: "seller",
           auth_user_id: currentSession.user.id,
         })
-        .select("id,full_name,email,auth_user_id")
+        .select("id,full_name,email,auth_user_id,role")
         .single();
 
       if (createError || !createdUser) {
