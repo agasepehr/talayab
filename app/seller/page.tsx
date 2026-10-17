@@ -185,10 +185,11 @@ export default function SellerPanelPage() {
 
     const mapped = (productsResult.data ?? []).map((row) => {
       const weight = Number(row.weight ?? 0);
+      const karat = Number(row.karat ?? 18);
       const wageValue = Number(row.wage_value ?? 0);
       const profitPercent = Number(row.profit_percent ?? 0);
       const extraFee = Number(row.extra_fee ?? 0);
-      const goldValue = weight * gold18;
+      const goldValue = weight * gold18 * (karat / 18);
       const wage = goldValue * (wageValue / 100);
       const profit = (goldValue + wage) * (profitPercent / 100);
       const price = goldValue + wage + profit + extraFee;
