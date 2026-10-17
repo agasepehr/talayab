@@ -156,7 +156,7 @@ export default function Home() {
 
           {/* Description */}
           <p className="mt-[5%] text-[1.2vw] leading-[2] text-[#183f36]">
-            طلاها را ببین، قیمت‌ها را مقایسه کن
+            قیمت، اجرت و جزئیات طلاها را مقایسه کن
             <br />
             و آگاهانه انتخاب کن.
           </p>
@@ -167,7 +167,7 @@ export default function Home() {
             className="mt-[5%] flex w-[55%] items-center justify-between rounded-full bg-[#063b30] px-[5%] py-[3%] text-[1.2vw] text-white transition hover:bg-[#0a4a3c]"
           >
             <span>
-              مشاهده طلاها
+              مقایسه طلاها
             </span>
 
             <span className="text-[#d3a85a]">
