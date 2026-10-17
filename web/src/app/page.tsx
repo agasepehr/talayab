@@ -33,12 +33,12 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="flex-1" />
+          <div className="hidden flex-1 md:block" />
 
           {/* Menu */}
           <nav
             dir="rtl"
-            className="flex gap-[2.4vw] text-[1.1vw] font-medium text-[#073b31]"
+            className="hidden gap-[2.4vw] text-[1.1vw] font-medium text-[#073b31] md:flex"
           >
             <a
               href="/#about"
@@ -79,12 +79,12 @@ export default function Home() {
           </nav>
 
           {/* Icons */}
-          <div className="flex items-center gap-[2vw]">
+          <div className="flex items-center gap-4 md:gap-[2vw]">
 
             {/* Search */}
-            <button
-              type="button"
-              aria-label="جستجو"
+            <Link
+              href="/gold"
+              aria-label="جستجوی طلا"
               className="text-[#073b31] transition hover:text-[#b8893d]"
             >
               <svg
@@ -106,18 +106,19 @@ export default function Home() {
                   strokeWidth="2"
                 />
               </svg>
-            </button>
+            </Link>
 
-            {/* Hamburger */}
-            <button
-              type="button"
-              aria-label="منو"
-              className="flex flex-col gap-1"
+            {/* Mobile menu */}
+
+            <Link
+              href="/shops"
+              aria-label="فروشگاه‌ها"
+              className="flex flex-col gap-1 md:hidden"
             >
-              <span className="h-[2px] w-[2vw] bg-[#073b31]" />
-              <span className="h-[2px] w-[2vw] bg-[#073b31]" />
-              <span className="h-[2px] w-[2vw] bg-[#073b31]" />
-            </button>
+              <span className="h-[2px] w-5 bg-[#073b31]" />
+              <span className="h-[2px] w-5 bg-[#073b31]" />
+              <span className="h-[2px] w-5 bg-[#073b31]" />
+            </Link>
 
           </div>
         </header>
@@ -144,11 +145,11 @@ export default function Home() {
           <h1 className="leading-[1.2]">
 
             <span className="block text-[4vw] font-bold text-[#073b31]">
-              طلای خوب،
+              طلای خوب
             </span>
 
             <span className="block text-[4.2vw] font-bold text-[#b8893d]">
-              پیدا می‌شه.
+              پیدا می‌شه
             </span>
 
           </h1>
