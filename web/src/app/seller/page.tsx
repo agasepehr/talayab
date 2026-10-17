@@ -493,22 +493,41 @@ export default function SellerPanelPage() {
       return;
     }
 
+    const weight = toNumber(form.weight);
+    const karat = toNumber(form.karat);
+    const wage = toNumber(form.wage);
+    const profit = toNumber(form.profit);
+    const extraFee = toNumber(form.price);
+
+    if (weight <= 0) {
+      setProductError("وزن محصول باید بیشتر از صفر باشد.");
+      return;
+    }
+
+    if (karat < 1 || karat > 24) {
+      setProductError("عیار محصول باید بین ۱ تا ۲۴ باشد.");
+      return;
+    }
+
+    if (wage < 0 || profit < 0 || extraFee < 0) {
+      setProductError("اجرت، سود و هزینه اضافه نمی‌توانند منفی باشند.");
+      return;
+    }
+
     const category = categories.find(
       (item) => item.name === form.category
     );
-
-    const extraFee = toNumber(form.price);
 
     const payload = {
       shop_id: shop.id,
       category_id: category?.id ?? null,
       title: form.name.trim(),
       description: form.description.trim() || null,
-      weight: toNumber(form.weight),
-      karat: toNumber(form.karat) || 18,
+      weight,
+      karat,
       wage_type: "percent",
-      wage_value: toNumber(form.wage),
-      profit_percent: toNumber(form.profit),
+      wage_value: wage,
+      profit_percent: profit,
       extra_fee: extraFee,
       image: "/hero-luxury.jpg",
       status:
