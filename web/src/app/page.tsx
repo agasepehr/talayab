@@ -179,6 +179,28 @@ export default function Home() {
 
       </section>
 
+
+      <section id="about" dir="rtl" className="border-t border-[#E7EEE9] bg-[#F7FAF8] px-[8%] py-20">
+        <div className="mx-auto max-w-5xl">
+          <div className="text-sm font-semibold tracking-wide text-[#B8893D]">THETALA</div>
+          <h2 className="mt-3 text-3xl font-extrabold text-[#073B31]">درباره TheTala</h2>
+          <p className="mt-5 max-w-3xl text-base leading-8 text-[#52665E]">
+            TheTala برای پیدا کردن، مقایسه و بررسی قیمت محصولات طلا ساخته شده است؛
+            تا انتخاب بین فروشگاه‌ها و محصولات، شفاف‌تر و آگاهانه‌تر باشد.
+          </p>
+        </div>
+      </section>
+
+      <section id="magazine" dir="rtl" className="bg-white px-[8%] py-20">
+        <div className="mx-auto max-w-5xl rounded-[28px] border border-[#E7EEE9] bg-[#F7FAF8] p-8 md:p-12">
+          <div className="text-sm font-semibold tracking-wide text-[#B8893D]">MAGAZINE</div>
+          <h2 className="mt-3 text-3xl font-extrabold text-[#073B31]">مجله TheTala</h2>
+          <p className="mt-5 text-base leading-8 text-[#52665E]">
+            محتوای آموزشی و راهنمای خرید طلا در این بخش منتشر خواهد شد.
+          </p>
+        </div>
+      </section>
+
     </main>
   );
 }
