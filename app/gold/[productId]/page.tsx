@@ -76,7 +76,9 @@ function formatToman(value: number) {
 
 function calculatePrice(product: RawProduct, gold18Price: number) {
   const weight = Number(product.weight ?? 0);
-  const goldValue = weight * gold18Price;
+  const karat = Number(product.karat ?? 18);
+  const purityFactor = karat / 18;
+  const goldValue = weight * gold18Price * purityFactor;
   const wage =
     product.wage_type === "percent"
       ? goldValue * (Number(product.wage_value ?? 0) / 100)
