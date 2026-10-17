@@ -160,7 +160,7 @@ export default function SellerPanelPage() {
       supabase
         .from("products")
         .select(
-          "id,title,category_id,weight,karat,wage_value,extra_fee,description,status"
+          "id,title,category_id,weight,karat,wage_value,profit_percent,extra_fee,description,status"
         )
         .eq("shop_id", shopId)
         .order("id", { ascending: false }),
@@ -186,10 +186,12 @@ export default function SellerPanelPage() {
     const mapped = (productsResult.data ?? []).map((row) => {
       const weight = Number(row.weight ?? 0);
       const wageValue = Number(row.wage_value ?? 0);
+      const profitPercent = Number(row.profit_percent ?? 0);
       const extraFee = Number(row.extra_fee ?? 0);
       const goldValue = weight * gold18;
-      const price =
-        goldValue + goldValue * (wageValue / 100) + extraFee;
+      const wage = goldValue * (wageValue / 100);
+      const profit = (goldValue + wage) * (profitPercent / 100);
+      const price = goldValue + wage + profit + extraFee;
 
       return {
         id: row.id,
