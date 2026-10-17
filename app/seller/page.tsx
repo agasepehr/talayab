@@ -22,6 +22,7 @@ type Product = {
   storePageViews: number;
   karat: number;
   wageValue: number;
+  profitPercent: number;
   extraFee: number;
   description: string;
 };
@@ -145,6 +146,7 @@ export default function SellerPanelPage() {
     weight: "",
     karat: "18",
     wage: "8",
+    profit: "0",
     price: "",
     stock: "موجود",
     description: "",
@@ -211,6 +213,7 @@ export default function SellerPanelPage() {
         storePageViews: 0,
         karat: Number(row.karat ?? 18),
         wageValue,
+        profitPercent,
         extraFee,
         description: row.description ?? "",
       } as Product;
@@ -530,7 +533,7 @@ export default function SellerPanelPage() {
       karat: toNumber(form.karat) || 18,
       wage_type: "percent",
       wage_value: toNumber(form.wage),
-      profit_percent: 0,
+      profit_percent: toNumber(form.profit),
       extra_fee: extraFee,
       image: "/hero-luxury.jpg",
       status:
@@ -569,6 +572,7 @@ export default function SellerPanelPage() {
       weight: "",
       karat: "18",
       wage: "8",
+      profit: "0",
       price: "",
       stock: "موجود",
       description: "",
@@ -625,6 +629,7 @@ export default function SellerPanelPage() {
       weight: product.weight,
       karat: String(product.karat),
       wage: String(product.wageValue),
+      profit: String(product.profitPercent),
       price: String(product.extraFee),
       stock:
         product.status === "فعال"
@@ -1087,8 +1092,8 @@ if (authChecking) {
                     }
                     className="h-12 w-full rounded-xl border border-[#DDE7E1] bg-[#FAFCFB] px-4 text-sm outline-none transition focus:border-[#C9A227] focus:bg-white"
                   >
-                    <option>۱۸ عیار</option>
-                    <option>۲۴ عیار</option>
+                    <option value="18">۱۸ عیار</option>
+                    <option value="24">۲۴ عیار</option>
                   </select>
                 </div>
 
@@ -1106,6 +1111,25 @@ if (authChecking) {
                       })
                     }
                     placeholder="مثلاً ۸٪"
+                    className="h-12 w-full rounded-xl border border-[#DDE7E1] bg-[#FAFCFB] px-4 text-sm outline-none transition focus:border-[#C9A227] focus:bg-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-bold">
+                    سود فروشنده
+                  </label>
+
+                  <input
+                    value={form.profit}
+                    onChange={(event) =>
+                      setForm({
+                        ...form,
+                        profit: event.target.value,
+                      })
+                    }
+                    placeholder="مثلاً ۱۰٪"
+                    inputMode="decimal"
                     className="h-12 w-full rounded-xl border border-[#DDE7E1] bg-[#FAFCFB] px-4 text-sm outline-none transition focus:border-[#C9A227] focus:bg-white"
                   />
                 </div>
