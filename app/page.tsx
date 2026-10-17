@@ -39,14 +39,14 @@ export default function Home() {
             className="ml-[3%] flex gap-[2.4vw] text-[1.1vw] font-medium text-[#073b31]"
           >
             <a
-              href="#"
+              href="/#about"
               className="transition hover:text-[#b8893d]"
             >
               درباره ما
             </a>
 
             <a
-              href="#"
+              href="/#magazine"
               className="transition hover:text-[#b8893d]"
             >
               مجله
@@ -136,7 +136,7 @@ export default function Home() {
             dir="ltr"
             className="mb-[4%] flex items-center gap-5 text-[1vw] tracking-[0.5em] text-[#073b31]"
           >
-            <span>T A L A K H U N E H</span>
+            <span>T H E T A L A</span>
 
             <span className="h-[1px] w-20 bg-[#b8893d]" />
           </div>
