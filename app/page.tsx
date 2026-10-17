@@ -33,10 +33,12 @@ export default function Home() {
             </div>
           </div>
 
+          <div className="flex-1" />
+
           {/* Menu */}
           <nav
             dir="rtl"
-            className="ml-[3%] flex gap-[2.4vw] text-[1.1vw] font-medium text-[#073b31]"
+            className="flex gap-[2.4vw] text-[1.1vw] font-medium text-[#073b31]"
           >
             <a
               href="/#about"
@@ -75,9 +77,6 @@ export default function Home() {
               <span className="absolute -bottom-3 left-1/2 h-[2px] w-full -translate-x-1/2 bg-[#b8893d]" />
             </a>
           </nav>
-
-          {/* Space */}
-          <div className="flex-1" />
 
           {/* Icons */}
           <div className="flex items-center gap-[2vw]">
@@ -145,7 +144,7 @@ export default function Home() {
           <h1 className="leading-[1.2]">
 
             <span className="block text-[4vw] font-bold text-[#073b31]">
-              طلای درست،
+              طلای خوب،
             </span>
 
             <span className="block text-[4.2vw] font-bold text-[#b8893d]">
@@ -167,7 +166,7 @@ export default function Home() {
             className="mt-[5%] flex w-[55%] items-center justify-between rounded-full bg-[#063b30] px-[5%] py-[3%] text-[1.2vw] text-white transition hover:bg-[#0a4a3c]"
           >
             <span>
-              کشف طلاها
+              مشاهده طلاها
             </span>
 
             <span className="text-[#d3a85a]">
