@@ -14,7 +14,7 @@ export default function Home() {
         {/* Background */}
         <img
           src="/hero-luxury.jpg"
-          alt="طلاخونه"
+          alt="TheTala"
           className="absolute inset-0 h-full w-full object-cover"
         />
 
@@ -29,7 +29,7 @@ export default function Home() {
               dir="rtl"
               className="text-[2vw] font-extrabold tracking-tight text-[#073b31]"
             >
-              طلاخونه
+              TheTala
             </div>
           </div>
 
@@ -131,7 +131,7 @@ export default function Home() {
           className="absolute left-[10%] top-[24%] z-10 w-[38%]"
         >
 
-          {/* TALAKHUNEH */}
+          {/* THETALA */}
           <div
             dir="ltr"
             className="mb-[4%] flex items-center gap-5 text-[1vw] tracking-[0.5em] text-[#073b31]"
