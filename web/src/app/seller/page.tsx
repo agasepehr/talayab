@@ -177,6 +177,7 @@ export default function SellerPanelPage() {
 
     const mapped = (productsResult.data ?? []).map((row) => {
       const weight = Number(row.weight ?? 0);
+      const karat = Number(row.karat ?? 18);
       const wageValue = Number(row.wage_value ?? 0);
       const extraFee = Number(row.extra_fee ?? 0);
       const goldValue = weight * gold18;
