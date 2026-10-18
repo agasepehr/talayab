@@ -13,8 +13,23 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TheTala | THETALA",
+  metadataBase: new URL("https://thetala.ir"),
+  title: {
+    default: "TheTala | THETALA",
+    template: "%s | TheTala",
+  },
   description: "جستجو، مقایسه و ارتباط مستقیم با فروشگاه‌های طلا",
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: "TheTala | THETALA",
+    description: "جستجو، مقایسه و ارتباط مستقیم با فروشگاه‌های طلا",
+    url: "https://thetala.ir",
+    siteName: "TheTala",
+    locale: "fa_IR",
+    type: "website",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
