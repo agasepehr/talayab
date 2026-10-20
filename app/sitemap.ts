@@ -1,7 +1,15 @@
 import type { MetadataRoute } from "next";
+import {
+  getActiveProductIds,
+  getActiveShopIds,
+} from "../lib/seo-data";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://thetala.ir";
+  const [products, shops] = await Promise.all([
+    getActiveProductIds(),
+    getActiveShopIds(),
+  ]);
 
   return [
     {
@@ -17,12 +25,17 @@ export default function sitemap(): MetadataRoute.Sitemap {
     {
       url: `${baseUrl}/shops`,
       changeFrequency: "daily",
+      priority: 0.9,
+    },
+    ...products.map((product) => ({
+      url: `${baseUrl}/gold/${product.id}`,
+      changeFrequency: "daily" as const,
+      priority: 0.85,
+    })),
+    ...shops.map((shop) => ({
+      url: `${baseUrl}/shop/${shop.id}`,
+      changeFrequency: "daily" as const,
       priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/seller`,
-      changeFrequency: "weekly",
-      priority: 0.4,
-    },
+    })),
   ];
 }
