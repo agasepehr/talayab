@@ -5,6 +5,8 @@ services:
     plan: free
     buildCommand: npm ci && npm run build
     startCommand: npm start
+    domains:
+      - thetala.ir
     envVars:
       - key: NODE_VERSION
         value: "22"
