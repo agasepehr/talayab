@@ -78,8 +78,24 @@ export default function Home() {
             </a>
           </nav>
 
+          {/* Account */}
+          <div dir="rtl" className="mr-[2vw] flex items-center gap-2 text-[0.95vw] font-bold md:gap-[0.7vw]">
+            <Link
+              href="/login"
+              className="rounded-full border border-[#073b31]/20 bg-white/65 px-[1.1vw] py-[0.55vw] text-[#073b31] backdrop-blur transition hover:border-[#b8893d] hover:text-[#b8893d]"
+            >
+              ورود
+            </Link>
+            <Link
+              href="/register"
+              className="rounded-full bg-[#073b31] px-[1.2vw] py-[0.58vw] text-white transition hover:bg-[#0a4a3c]"
+            >
+              عضویت
+            </Link>
+          </div>
+
           {/* Icons */}
-          <div className="flex items-center gap-4 md:gap-[2vw]">
+          <div className="flex items-center gap-3 md:gap-[2vw]">
 
             {/* Search */}
             <Link
