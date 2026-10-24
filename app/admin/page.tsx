@@ -156,7 +156,7 @@ export default function AdminPage(){
   const resetShop=()=>{setShopId(null);setShopForm({owner_id:"",shop_name:"",city:"ارومیه",phone:"",instagram:"",logo:"",description:"",latitude:"",longitude:"",status:"active"});};
   const resetProduct=()=>{setProductId(null);setProductForm({shop_id:"",category_id:"",title:"",description:"",weight:"",karat:"18",wage_value:"0",profit_percent:"0",extra_fee:"0",image:"",status:"active"});};
   const resetCategory=()=>{setCategoryId(null);setCategoryForm({name:"",image:"",parent_id:""});};
-  const num=(v:string)=>{const x=Number(v.replace(/[۰-۹]/g,d=>String("۰۱۲۳۴۵۶۷۸۹".indexOf(d))).replace(/[٬،,]/g,""));return Number.isFinite(x)?x:null;};
+  const num=(v:string)=>{const cleaned=v.trim();if(!cleaned)return null;const x=Number(cleaned.replace(/[۰-۹]/g,d=>String("۰۱۲۳۴۵۶۷۸۹".indexOf(d))).replace(/[٬،,]/g,""));return Number.isFinite(x)?x:null;};
 
   const saveShop=async(e:React.FormEvent)=>{e.preventDefault();setMessage("");setError("");
     const {error:e1}=await supabase.rpc("admin_save_shop",{p_id:shopId,p_owner_id:num(shopForm.owner_id),p_shop_name:shopForm.shop_name,p_logo:shopForm.logo,p_description:shopForm.description,p_city:shopForm.city,p_phone:shopForm.phone,p_instagram:shopForm.instagram,p_latitude:num(shopForm.latitude),p_longitude:num(shopForm.longitude),p_status:shopForm.status});
@@ -174,7 +174,6 @@ export default function AdminPage(){
     const {error:e1}=await supabase.rpc("admin_set_user_role",{p_id:u.id,p_role:next});if(e1){rpcError(e1,"تغییر نقش ناموفق بود.");return;}setMessage("نقش کاربر تغییر کرد.");await load("users");
   };
 
-  const fs=(arr:Array<Record<string,unknown>>)=>arr.filter(x=>Object.values(x).join(" ").toLowerCase().includes(query.toLowerCase()));
   const filteredShops=useMemo(()=>query?shops.filter(s=>Object.values(s).join(" ").toLowerCase().includes(query.toLowerCase())):shops,[shops,query]);
   const filteredProducts=useMemo(()=>query?products.filter(p=>Object.values(p).join(" ").toLowerCase().includes(query.toLowerCase())):products,[products,query]);
   const filteredCategories=useMemo(()=>query?categories.filter(c=>Object.values(c).join(" ").toLowerCase().includes(query.toLowerCase())):categories,[categories,query]);
