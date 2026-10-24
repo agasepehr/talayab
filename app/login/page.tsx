@@ -42,37 +42,26 @@ export default function LoginPage() {
       return;
     }
 
-    let { error: loginError } = await supabase.auth.signInWithOtp({
+    const { data: isAdminEmail } = await supabase.rpc("is_admin_email", {
+      p_email: normalized,
+    });
+
+    const { error: loginError } = await supabase.auth.signInWithOtp({
       email: normalized,
       options: {
-        shouldCreateUser: false,
+        // Only the pre-configured site-owner email may create its first Auth
+        // identity from the Login page. All other users must already exist.
+        shouldCreateUser: isAdminEmail === true,
         emailRedirectTo: window.location.origin + "/login",
       },
     });
 
-    // The owner already has an admin record in public.users, but may not yet
-    // have an Auth account. Allow only that configured admin email to create
-    // its first Auth identity through the normal Magic Link flow.
     if (loginError) {
-      const { data: isAdminEmail } = await supabase.rpc("is_admin_email", {
-        p_email: normalized,
-      });
-
-      if (isAdminEmail === true) {
-        const { error: ownerLoginError } = await supabase.auth.signInWithOtp({
-          email: normalized,
-          options: {
-            shouldCreateUser: true,
-            emailRedirectTo: window.location.origin + "/login",
-          },
-        });
-
-        loginError = ownerLoginError;
-      }
-    }
-
-    if (loginError) {
-      setError("این ایمیل هنوز ثبت‌نام نشده است؛ ابتدا عضو شوید.");
+      setError(
+        isAdminEmail === true
+          ? "ارسال لینک ورود مدیر انجام نشد؛ تنظیمات ایمیل Supabase را بررسی کنید."
+          : "این ایمیل هنوز ثبت‌نام نشده است؛ ابتدا عضو شوید."
+      );
     } else {
       setMessage("لینک ورود به ایمیل شما ارسال شد. روی لینک بزنید تا وارد حساب شوید.");
     }
