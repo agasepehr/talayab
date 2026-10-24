@@ -41,17 +41,12 @@ export default function Home() {
             className="hidden gap-[2.4vw] text-[1.1vw] font-medium text-[#073b31] md:flex"
           >
             <a
-              href="/#about"
-              className="transition hover:text-[#b8893d]"
+              href="/"
+              className="relative"
             >
-              درباره ما
-            </a>
+              خانه
 
-            <a
-              href="/#magazine"
-              className="transition hover:text-[#b8893d]"
-            >
-              مجله
+              <span className="absolute -bottom-3 left-1/2 h-[2px] w-full -translate-x-1/2 bg-[#b8893d]" />
             </a>
 
             <Link
@@ -69,12 +64,10 @@ export default function Home() {
             </a>
 
             <a
-              href="/"
-              className="relative"
+              href="/#about"
+              className="transition hover:text-[#b8893d]"
             >
-              خانه
-
-              <span className="absolute -bottom-3 left-1/2 h-[2px] w-full -translate-x-1/2 bg-[#b8893d]" />
+              درباره ما
             </a>
           </nav>
 
@@ -158,29 +151,29 @@ export default function Home() {
           </div>
 
           {/* Main Heading */}
-          <h1 className="leading-[1.2]">
+          <h1 className="leading-[1.3]">
 
-            <span className="block text-[4vw] font-bold text-[#073b31]">
-              طلای خوب
+            <span className="block whitespace-nowrap text-[3.6vw] font-bold text-[#073b31]">
+              طلا رو مقایسه کن،
             </span>
 
-            <span className="block text-[4.2vw] font-bold text-[#b8893d]">
-              پیدا می‌شه
+            <span className="block whitespace-nowrap text-[3.7vw] font-bold text-[#b8893d]">
+              مطمئن انتخاب کن
             </span>
 
           </h1>
 
           {/* Description */}
           <p className="mt-[5%] text-[1.2vw] leading-[2] text-[#183f36]">
-            قیمت، اجرت و جزئیات طلاها را مقایسه کن
+            قیمت و مشخصات طلاها را کنار هم ببین
             <br />
-            و آگاهانه انتخاب کن.
+            و با اطمینان انتخاب کن.
           </p>
 
           {/* CTA */}
           <Link
             href="/gold"
-            className="mt-[5%] flex w-[55%] items-center justify-between rounded-full bg-[#063b30] px-[5%] py-[3%] text-[1.2vw] text-white transition hover:bg-[#0a4a3c]"
+            className="mt-[5%] flex w-fit items-center gap-[1vw] rounded-full bg-[#063b30] px-[2.2vw] py-[0.9vw] text-[1.3vw] font-bold text-white transition hover:bg-[#0a4a3c]"
           >
             <span>
               مقایسه طلاها
