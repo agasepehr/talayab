@@ -88,7 +88,7 @@ export default function Home() {
           </div>
 
           {/* Icons */}
-          <div className="flex items-center gap-3 md:gap-[2vw]">
+          <div className="mr-3 flex items-center gap-3 md:mr-[2.2vw] md:gap-[2vw]">
 
             {/* Search */}
             <Link
@@ -137,7 +137,7 @@ export default function Home() {
         ========================== */}
         <div
           dir="rtl"
-          className="absolute left-[10%] top-[24%] z-10 w-[38%]"
+          className="absolute left-[10%] top-[28%] z-10 w-[38%]"
         >
 
           {/* THETALA */}
@@ -163,24 +163,30 @@ export default function Home() {
 
           </h1>
 
-          {/* Description */}
-          <p className="mt-[5%] text-[1.2vw] leading-[2] text-[#183f36]">
-            قیمت و مشخصات طلاها را کنار هم ببین
-            <br />
-            و با اطمینان انتخاب کن.
-          </p>
-
           {/* CTA */}
           <Link
             href="/gold"
-            className="mt-[5%] flex w-fit items-center gap-[1vw] rounded-full bg-[#063b30] px-[2.2vw] py-[0.9vw] text-[1.3vw] font-bold text-white transition hover:bg-[#0a4a3c]"
+            className="group mt-[3.5vw] inline-flex w-fit items-center gap-[1.2vw] rounded-full bg-[#063b30] py-[0.55vw] pl-[0.55vw] pr-[2.4vw] text-[1.3vw] font-bold text-white shadow-lg shadow-[#063b30]/25 transition hover:bg-[#0a4a3c]"
           >
             <span>
               مقایسه طلاها
             </span>
 
-            <span className="text-[#d3a85a]">
-              ←
+            <span className="flex h-[2.8vw] w-[2.8vw] items-center justify-center rounded-full bg-[#d3a85a] text-[#063b30] transition-transform duration-300 group-hover:-translate-x-1">
+              <svg
+                className="w-[1.3vw]"
+                viewBox="0 0 24 24"
+                fill="none"
+                aria-hidden="true"
+              >
+                <path
+                  d="M19 12H5M11 6l-6 6 6 6"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
             </span>
           </Link>
 
