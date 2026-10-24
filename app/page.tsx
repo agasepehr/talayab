@@ -79,16 +79,16 @@ export default function Home() {
           </nav>
 
           {/* Account */}
-          <div dir="rtl" className="mr-[2vw] flex items-center gap-2 text-[0.95vw] font-bold md:gap-[0.7vw]">
+          <div dir="rtl" className="mr-[2vw] flex items-center gap-2 text-sm font-bold md:gap-[0.7vw] md:text-[0.95vw]">
             <Link
               href="/login"
-              className="rounded-full border border-[#073b31]/20 bg-white/65 px-[1.1vw] py-[0.55vw] text-[#073b31] backdrop-blur transition hover:border-[#b8893d] hover:text-[#b8893d]"
+              className="rounded-full border border-[#073b31]/20 bg-white/65 px-3 py-2 text-[#073b31] backdrop-blur transition hover:border-[#b8893d] hover:text-[#b8893d] md:px-[1.1vw] md:py-[0.55vw]"
             >
               ورود
             </Link>
             <Link
               href="/register"
-              className="rounded-full bg-[#073b31] px-[1.2vw] py-[0.58vw] text-white transition hover:bg-[#0a4a3c]"
+              className="rounded-full bg-[#073b31] px-3 py-2 text-white transition hover:bg-[#0a4a3c] md:px-[1.2vw] md:py-[0.58vw]"
             >
               عضویت
             </Link>
