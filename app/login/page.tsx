@@ -15,8 +15,13 @@ export default function LoginPage() {
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
       if (!data.session) return;
+
+      // First try to connect the authenticated email to the pre-configured admin record.
+      await supabase.rpc("claim_admin_identity");
+
       const { data: roleData } = await supabase.rpc("get_my_role");
       const role = roleData?.role;
+
       if (role === "admin") router.replace("/admin");
       else if (role === "seller") router.replace("/seller");
       else router.replace("/");
@@ -30,19 +35,41 @@ export default function LoginPage() {
     setError("");
 
     const normalized = email.trim().toLowerCase();
+
     if (!normalized || !normalized.includes("@")) {
       setError("ایمیل معتبر وارد کنید.");
       setBusy(false);
       return;
     }
 
-    const { error: loginError } = await supabase.auth.signInWithOtp({
+    let { error: loginError } = await supabase.auth.signInWithOtp({
       email: normalized,
       options: {
         shouldCreateUser: false,
         emailRedirectTo: window.location.origin + "/login",
       },
     });
+
+    // The owner already has an admin record in public.users, but may not yet
+    // have an Auth account. Allow only that configured admin email to create
+    // its first Auth identity through the normal Magic Link flow.
+    if (loginError) {
+      const { data: isAdminEmail } = await supabase.rpc("is_admin_email", {
+        p_email: normalized,
+      });
+
+      if (isAdminEmail === true) {
+        const { error: ownerLoginError } = await supabase.auth.signInWithOtp({
+          email: normalized,
+          options: {
+            shouldCreateUser: true,
+            emailRedirectTo: window.location.origin + "/login",
+          },
+        });
+
+        loginError = ownerLoginError;
+      }
+    }
 
     if (loginError) {
       setError("این ایمیل هنوز ثبت‌نام نشده است؛ ابتدا عضو شوید.");
