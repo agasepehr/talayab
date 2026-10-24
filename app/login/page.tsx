@@ -8,28 +8,32 @@ import { supabase } from "../lib/supabase";
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
+  const [code, setCode] = useState("");
+  const [step, setStep] = useState<"email" | "code">("email");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
+  const routeUser = async () => {
+    await supabase.rpc("claim_admin_identity");
+
+    const { data: roleData } = await supabase.rpc("get_my_role");
+    const role = roleData?.role;
+
+    if (role === "admin") router.replace("/admin");
+    else if (role === "seller") router.replace("/seller");
+    else router.replace("/");
+  };
+
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
       if (!data.session) return;
-
-      // First try to connect the authenticated email to the pre-configured admin record.
-      await supabase.rpc("claim_admin_identity");
-
-      const { data: roleData } = await supabase.rpc("get_my_role");
-      const role = roleData?.role;
-
-      if (role === "admin") router.replace("/admin");
-      else if (role === "seller") router.replace("/seller");
-      else router.replace("/");
+      await routeUser();
     });
-  }, [router]);
+  }, []);
 
-  const submit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const sendCode = async (event?: React.FormEvent<HTMLFormElement>) => {
+    event?.preventDefault();
     setBusy(true);
     setMessage("");
     setError("");
@@ -42,15 +46,19 @@ export default function LoginPage() {
       return;
     }
 
-    const { data: isAdminEmail } = await supabase.rpc("is_admin_email", {
+    const { data: isAdminEmail, error: adminCheckError } = await supabase.rpc("is_admin_email", {
       p_email: normalized,
     });
+
+    if (adminCheckError) {
+      setError("بررسی حساب انجام نشد. دوباره تلاش کنید.");
+      setBusy(false);
+      return;
+    }
 
     const { error: loginError } = await supabase.auth.signInWithOtp({
       email: normalized,
       options: {
-        // Only the pre-configured site-owner email may create its first Auth
-        // identity from the Login page. All other users must already exist.
         shouldCreateUser: isAdminEmail === true,
         emailRedirectTo: window.location.origin + "/login",
       },
@@ -59,14 +67,46 @@ export default function LoginPage() {
     if (loginError) {
       setError(
         isAdminEmail === true
-          ? "ارسال لینک ورود مدیر انجام نشد؛ تنظیمات ایمیل Supabase را بررسی کنید."
+          ? "ارسال کد ورود مدیر انجام نشد. تنظیمات ایمیل Supabase را بررسی کنید."
           : "این ایمیل هنوز ثبت‌نام نشده است؛ ابتدا عضو شوید."
       );
-    } else {
-      setMessage("لینک ورود به ایمیل شما ارسال شد. روی لینک بزنید تا وارد حساب شوید.");
+      setBusy(false);
+      return;
     }
 
+    setStep("code");
+    setMessage("کد ۶ رقمی به ایمیل شما ارسال شد. آن را در کادر پایین وارد کنید.");
     setBusy(false);
+  };
+
+  const verifyCode = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setBusy(true);
+    setMessage("");
+    setError("");
+
+    const normalized = email.trim().toLowerCase();
+    const normalizedCode = code.trim();
+
+    if (!/^\d{6}$/.test(normalizedCode)) {
+      setError("کد تأیید باید ۶ رقمی باشد.");
+      setBusy(false);
+      return;
+    }
+
+    const { error: verifyError } = await supabase.auth.verifyOtp({
+      email: normalized,
+      token: normalizedCode,
+      type: "email",
+    });
+
+    if (verifyError) {
+      setError("کد تأیید نادرست یا منقضی شده است. دوباره کد بگیرید.");
+      setBusy(false);
+      return;
+    }
+
+    await routeUser();
   };
 
   return (
@@ -77,36 +117,89 @@ export default function LoginPage() {
             <div className="text-xs font-black tracking-[0.25em] text-[#D3A85A]">THETALA</div>
             <h1 className="mt-5 text-4xl font-black leading-tight">خوش برگشتی</h1>
             <p className="mt-4 text-sm leading-8 text-[#DCE9E3]">
-              با ورود به حساب، مسیرت را ادامه بده؛ از بررسی طلاها تا مدیریت فروشگاه.
+              وارد حساب خودت شو و از امکانات TheTala استفاده کن؛ بدون نیاز به رمز عبور.
             </p>
             <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm leading-7 text-[#DCE9E3]">
-              ورود با لینک یک‌بارمصرف ایمیل انجام می‌شود؛ نیازی به حفظ رمز عبور نیست.
+              کد ورود ۶ رقمی به ایمیل شما ارسال می‌شود و همان کد برای ورود استفاده می‌شود.
             </div>
           </section>
 
           <section className="p-8 md:p-10">
             <h2 className="text-2xl font-black">ورود به حساب</h2>
-            <p className="mt-2 text-sm leading-7 text-[#71827A]">
-              ایمیل حسابی که قبلاً ثبت‌نام کرده‌اید را وارد کنید.
-            </p>
 
-            <form onSubmit={submit} className="mt-8">
-              <label className="text-sm font-bold">ایمیل</label>
-              <input
-                type="email"
-                dir="ltr"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                className="mt-2 h-14 w-full rounded-2xl border border-[#DDE8E1] bg-[#FAFCFB] px-4 text-sm outline-none focus:border-[#C9A227]"
-              />
-              <button
-                disabled={busy}
-                className="mt-4 h-14 w-full rounded-2xl bg-[#173C32] text-sm font-black text-white disabled:opacity-60"
-              >
-                {busy ? "در حال ارسال..." : "ارسال لینک ورود"}
-              </button>
-            </form>
+            {step === "email" ? (
+              <>
+                <p className="mt-2 text-sm leading-7 text-[#71827A]">
+                  ایمیل حسابی که قبلاً ثبت‌نام کرده‌اید را وارد کنید.
+                </p>
+
+                <form onSubmit={sendCode} className="mt-8">
+                  <label className="text-sm font-bold">ایمیل</label>
+                  <input
+                    type="email"
+                    dir="ltr"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    className="mt-2 h-14 w-full rounded-2xl border border-[#DDE8E1] bg-[#FAFCFB] px-4 text-sm outline-none focus:border-[#C9A227]"
+                  />
+                  <button
+                    disabled={busy}
+                    className="mt-4 h-14 w-full rounded-2xl bg-[#173C32] text-sm font-black text-white disabled:opacity-60"
+                  >
+                    {busy ? "در حال ارسال..." : "دریافت کد ورود"}
+                  </button>
+                </form>
+              </>
+            ) : (
+              <>
+                <p className="mt-2 text-sm leading-7 text-[#71827A]">
+                  کد ۶ رقمی ارسال‌شده به <span dir="ltr" className="font-bold text-[#173C32]">{email}</span> را وارد کنید.
+                </p>
+
+                <form onSubmit={verifyCode} className="mt-8">
+                  <label className="text-sm font-bold">کد تأیید</label>
+                  <input
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    maxLength={6}
+                    value={code}
+                    onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                    placeholder="123456"
+                    dir="ltr"
+                    className="mt-2 h-14 w-full rounded-2xl border border-[#DDE8E1] bg-[#FAFCFB] px-4 text-center text-xl font-black tracking-[0.35em] outline-none focus:border-[#C9A227]"
+                  />
+                  <button
+                    disabled={busy}
+                    className="mt-4 h-14 w-full rounded-2xl bg-[#173C32] text-sm font-black text-white disabled:opacity-60"
+                  >
+                    {busy ? "در حال بررسی..." : "تأیید کد و ورود"}
+                  </button>
+                </form>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStep("email");
+                    setCode("");
+                    setMessage("");
+                    setError("");
+                  }}
+                  className="mt-4 w-full text-sm font-bold text-[#A17915] hover:underline"
+                >
+                  تغییر ایمیل
+                </button>
+
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void sendCode()}
+                  className="mt-2 w-full text-sm font-bold text-[#60766C] hover:underline disabled:opacity-50"
+                >
+                  ارسال دوباره کد
+                </button>
+              </>
+            )}
 
             {message ? <div className="mt-5 rounded-2xl bg-[#E8F5EE] p-4 text-sm leading-7 text-[#17633F]">{message}</div> : null}
             {error ? <div className="mt-5 rounded-2xl bg-[#FCEBEC] p-4 text-sm leading-7 text-[#A33C46]">{error}</div> : null}
