@@ -23,9 +23,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.95,
     },
     {
+      url: `${baseUrl}/gold/urmia`,
+      changeFrequency: "daily",
+      priority: 0.93,
+    },
+    {
       url: `${baseUrl}/shops`,
       changeFrequency: "daily",
       priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/shops/urmia`,
+      changeFrequency: "daily",
+      priority: 0.88,
     },
     ...products.map((product) => ({
       url: `${baseUrl}/gold/${product.id}`,
