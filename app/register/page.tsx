@@ -5,43 +5,65 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../lib/supabase";
 
+type RegisterPayload = {
+  fullName?: string;
+  phone?: string;
+};
+
 export default function RegisterPage() {
   const router = useRouter();
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
+  const [code, setCode] = useState("");
+  const [step, setStep] = useState<"details" | "code">("details");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
+  const completeRegistration = async () => {
+    let payload: RegisterPayload = {};
+
+    try {
+      const saved = window.localStorage.getItem("thetala_register");
+      payload = saved ? (JSON.parse(saved) as RegisterPayload) : {};
+    } catch {
+      window.localStorage.removeItem("thetala_register");
+    }
+
+    const { data, error: registrationError } = await supabase.rpc(
+      "complete_member_registration",
+      {
+        p_full_name: payload.fullName || fullName.trim(),
+        p_phone: payload.phone || phone.trim() || null,
+      }
+    );
+
+    if (registrationError) {
+      setError(
+        registrationError.message === "full_name_required"
+          ? "نام و نام خانوادگی الزامی است."
+          : "تکمیل عضویت ناموفق بود."
+      );
+      return;
+    }
+
+    window.localStorage.removeItem("thetala_register");
+
+    if (data?.role === "admin") router.replace("/admin");
+    else if (data?.role === "seller") router.replace("/seller");
+    else router.replace("/");
+  };
+
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
       if (!data.session) return;
-
-      const saved = window.localStorage.getItem("thetala_register");
-      const payload = saved ? JSON.parse(saved) as { fullName?: string; phone?: string } : {};
-      const { data: result, error: registrationError } = await supabase.rpc(
-        "complete_member_registration",
-        {
-          p_full_name: payload.fullName || data.session.user.user_metadata?.full_name || "عضو TheTala",
-          p_phone: payload.phone || data.session.user.user_metadata?.phone || null,
-        }
-      );
-
-      if (registrationError) {
-        setError(registrationError.message === "full_name_required" ? "نام و نام خانوادگی الزامی است." : "تکمیل عضویت ناموفق بود.");
-        return;
-      }
-
-      window.localStorage.removeItem("thetala_register");
-      if (result?.role === "admin") router.replace("/admin");
-      else if (result?.role === "seller") router.replace("/seller");
-      else router.replace("/");
+      await completeRegistration();
     });
-  }, [router]);
+  }, []);
 
-  const submit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const sendCode = async (event?: React.FormEvent<HTMLFormElement>) => {
+    event?.preventDefault();
     setBusy(true);
     setMessage("");
     setError("");
@@ -74,18 +96,48 @@ export default function RegisterPage() {
           full_name: name,
           phone: phone.trim(),
         },
-        emailRedirectTo: window.location.origin + "/register",
       },
     });
 
     if (signUpError) {
-      setError(signUpError.message);
+      setError("ارسال کد عضویت انجام نشد. دوباره تلاش کنید.");
       setBusy(false);
       return;
     }
 
-    setMessage("لینک تکمیل عضویت به ایمیل شما ارسال شد. روی لینک بزنید تا حساب ساخته شود.");
+    setStep("code");
+    setMessage("کد ۶ رقمی به ایمیل شما ارسال شد.");
     setBusy(false);
+  };
+
+  const verifyCode = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setBusy(true);
+    setMessage("");
+    setError("");
+
+    const normalized = email.trim().toLowerCase();
+    const normalizedCode = code.trim();
+
+    if (!/^\d{6}$/.test(normalizedCode)) {
+      setError("کد تأیید باید ۶ رقمی باشد.");
+      setBusy(false);
+      return;
+    }
+
+    const { error: verifyError } = await supabase.auth.verifyOtp({
+      email: normalized,
+      token: normalizedCode,
+      type: "email",
+    });
+
+    if (verifyError) {
+      setError("کد تأیید نادرست یا منقضی شده است. دوباره کد بگیرید.");
+      setBusy(false);
+      return;
+    }
+
+    await completeRegistration();
   };
 
   return (
@@ -96,45 +148,101 @@ export default function RegisterPage() {
             <div className="text-xs font-black tracking-[0.25em] text-[#D3A85A]">THETALA</div>
             <h1 className="mt-5 text-4xl font-black leading-tight">به TheTala بپیوند</h1>
             <p className="mt-4 text-sm leading-8 text-[#DCE9E3]">
-              یک حساب بساز و بعداً می‌توانی اطلاعات حسابت را تکمیل کنی و از امکانات TheTala استفاده کنی.
+              حساب خودت را با ایمیل بساز و با یک کد ۶ رقمی وارد TheTala شو.
             </p>
+            <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm leading-7 text-[#DCE9E3]">
+              رمز عبور لازم نیست؛ کد تأیید مستقیم به ایمیلت ارسال می‌شود.
+            </div>
           </section>
 
           <section className="p-8 md:p-10">
             <h2 className="text-2xl font-black">عضویت</h2>
-            <p className="mt-2 text-sm leading-7 text-[#71827A]">
-              نام، تلفن و ایمیل خود را وارد کنید.
-            </p>
 
-            <form onSubmit={submit} className="mt-8 space-y-4">
-              <input
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="نام و نام خانوادگی"
-                className="h-14 w-full rounded-2xl border border-[#DDE8E1] bg-[#FAFCFB] px-4 text-sm outline-none focus:border-[#C9A227]"
-              />
-              <input
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="شماره موبایل (اختیاری)"
-                dir="ltr"
-                className="h-14 w-full rounded-2xl border border-[#DDE8E1] bg-[#FAFCFB] px-4 text-sm outline-none focus:border-[#C9A227]"
-              />
-              <input
-                type="email"
-                dir="ltr"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                className="h-14 w-full rounded-2xl border border-[#DDE8E1] bg-[#FAFCFB] px-4 text-sm outline-none focus:border-[#C9A227]"
-              />
-              <button
-                disabled={busy}
-                className="h-14 w-full rounded-2xl bg-[#173C32] text-sm font-black text-white disabled:opacity-60"
-              >
-                {busy ? "در حال ارسال..." : "عضویت و دریافت لینک"}
-              </button>
-            </form>
+            {step === "details" ? (
+              <>
+                <p className="mt-2 text-sm leading-7 text-[#71827A]">
+                  نام، تلفن و ایمیل خود را وارد کنید.
+                </p>
+
+                <form onSubmit={sendCode} className="mt-8 space-y-4">
+                  <input
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="نام و نام خانوادگی"
+                    className="h-14 w-full rounded-2xl border border-[#DDE8E1] bg-[#FAFCFB] px-4 text-sm outline-none focus:border-[#C9A227]"
+                  />
+                  <input
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="شماره موبایل (اختیاری)"
+                    dir="ltr"
+                    className="h-14 w-full rounded-2xl border border-[#DDE8E1] bg-[#FAFCFB] px-4 text-sm outline-none focus:border-[#C9A227]"
+                  />
+                  <input
+                    type="email"
+                    dir="ltr"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    className="h-14 w-full rounded-2xl border border-[#DDE8E1] bg-[#FAFCFB] px-4 text-sm outline-none focus:border-[#C9A227]"
+                  />
+                  <button
+                    disabled={busy}
+                    className="h-14 w-full rounded-2xl bg-[#173C32] text-sm font-black text-white disabled:opacity-60"
+                  >
+                    {busy ? "در حال ارسال..." : "عضویت و دریافت کد"}
+                  </button>
+                </form>
+              </>
+            ) : (
+              <>
+                <p className="mt-2 text-sm leading-7 text-[#71827A]">
+                  کد ۶ رقمی ارسال‌شده به <span dir="ltr" className="font-bold text-[#173C32]">{email}</span> را وارد کنید.
+                </p>
+
+                <form onSubmit={verifyCode} className="mt-8">
+                  <label className="text-sm font-bold">کد تأیید</label>
+                  <input
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    maxLength={6}
+                    value={code}
+                    onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                    placeholder="123456"
+                    dir="ltr"
+                    className="mt-2 h-14 w-full rounded-2xl border border-[#DDE8E1] bg-[#FAFCFB] px-4 text-center text-xl font-black tracking-[0.35em] outline-none focus:border-[#C9A227]"
+                  />
+                  <button
+                    disabled={busy}
+                    className="mt-4 h-14 w-full rounded-2xl bg-[#173C32] text-sm font-black text-white disabled:opacity-60"
+                  >
+                    {busy ? "در حال بررسی..." : "تأیید کد و تکمیل عضویت"}
+                  </button>
+                </form>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStep("details");
+                    setCode("");
+                    setMessage("");
+                    setError("");
+                  }}
+                  className="mt-4 w-full text-sm font-bold text-[#A17915] hover:underline"
+                >
+                  تغییر اطلاعات
+                </button>
+
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void sendCode()}
+                  className="mt-2 w-full text-sm font-bold text-[#60766C] hover:underline disabled:opacity-50"
+                >
+                  ارسال دوباره کد
+                </button>
+              </>
+            )}
 
             {message ? <div className="mt-5 rounded-2xl bg-[#E8F5EE] p-4 text-sm leading-7 text-[#17633F]">{message}</div> : null}
             {error ? <div className="mt-5 rounded-2xl bg-[#FCEBEC] p-4 text-sm leading-7 text-[#A33C46]">{error}</div> : null}
