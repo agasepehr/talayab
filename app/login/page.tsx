@@ -77,7 +77,7 @@ export default function LoginPage() {
     const normalizedCode = code.trim();
 
     if (!/^\d{8}$/.test(normalizedCode)) {
-      setError("کد تأیید باید ۸ رقمی باشد.");
+      setError("کد تأیید باید ۶ رقمی باشد.");
       setBusy(false);
       return;
     }
