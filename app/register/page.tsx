@@ -106,7 +106,7 @@ export default function RegisterPage() {
     }
 
     setStep("code");
-    setMessage("کد ۶ رقمی به ایمیل شما ارسال شد.");
+    setMessage("کد ۸ رقمی به ایمیل شما ارسال شد.");
     setBusy(false);
   };
 
@@ -120,7 +120,7 @@ export default function RegisterPage() {
     const normalizedCode = code.trim();
 
     if (!/^\d{6}$/.test(normalizedCode)) {
-      setError("کد تأیید باید ۶ رقمی باشد.");
+      setError("کد تأیید باید ۸ رقمی باشد.");
       setBusy(false);
       return;
     }
@@ -148,7 +148,7 @@ export default function RegisterPage() {
             <div className="text-xs font-black tracking-[0.25em] text-[#D3A85A]">THETALA</div>
             <h1 className="mt-5 text-4xl font-black leading-tight">به TheTala بپیوند</h1>
             <p className="mt-4 text-sm leading-8 text-[#DCE9E3]">
-              حساب خودت را با ایمیل بساز و با یک کد ۶ رقمی وارد TheTala شو.
+              حساب خودت را با ایمیل بساز و با یک کد ۸ رقمی وارد TheTala شو.
             </p>
             <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm leading-7 text-[#DCE9E3]">
               رمز عبور لازم نیست؛ کد تأیید مستقیم به ایمیلت ارسال می‌شود.
@@ -197,7 +197,7 @@ export default function RegisterPage() {
             ) : (
               <>
                 <p className="mt-2 text-sm leading-7 text-[#71827A]">
-                  کد ۶ رقمی ارسال‌شده به <span dir="ltr" className="font-bold text-[#173C32]">{email}</span> را وارد کنید.
+                  کد ۸ رقمی ارسال‌شده به <span dir="ltr" className="font-bold text-[#173C32]">{email}</span> را وارد کنید.
                 </p>
 
                 <form onSubmit={verifyCode} className="mt-8">
@@ -205,12 +205,12 @@ export default function RegisterPage() {
                   <input
                     inputMode="numeric"
                     autoComplete="one-time-code"
-                    maxLength={6}
+                    maxLength={8}
                     value={code}
-                    onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                    placeholder="123456"
+                    onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 8))}
+                    placeholder="12345678"
                     dir="ltr"
-                    className="mt-2 h-14 w-full rounded-2xl border border-[#DDE8E1] bg-[#FAFCFB] px-4 text-center text-xl font-black tracking-[0.35em] outline-none focus:border-[#C9A227]"
+                    className="mt-2 h-14 w-full rounded-2xl border border-[#DDE8E1] bg-[#FAFCFB] px-4 text-center text-xl font-black tracking-[0.28em] outline-none focus:border-[#C9A227]"
                   />
                   <button
                     disabled={busy}
