@@ -63,7 +63,7 @@ export default function LoginPage() {
     }
 
     setStep("code");
-    setMessage("کد ۸ رقمی به ایمیل شما ارسال شد. آن را در کادر پایین وارد کنید.");
+    setMessage("کد ۶ رقمی به ایمیل شما ارسال شد. آن را در کادر پایین وارد کنید.");
     setBusy(false);
   };
 
@@ -142,7 +142,7 @@ export default function LoginPage() {
             ) : (
               <>
                 <p className="mt-2 text-sm leading-7 text-[#71827A]">
-                  کد ۸ رقمی ارسال‌شده به <span dir="ltr" className="font-bold text-[#173C32]">{email}</span> را وارد کنید.
+                  کد ۶ رقمی ارسال‌شده به <span dir="ltr" className="font-bold text-[#173C32]">{email}</span> را وارد کنید.
                 </p>
 
                 <form onSubmit={verifyCode} className="mt-8">
@@ -150,10 +150,10 @@ export default function LoginPage() {
                   <input
                     inputMode="numeric"
                     autoComplete="one-time-code"
-                    maxLength={8}
+                    maxLength={6}
                     value={code}
-                    onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 8))}
-                    placeholder="12345678"
+                    onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                    placeholder="123456"
                     dir="ltr"
                     className="mt-2 h-14 w-full rounded-2xl border border-[#DDE8E1] bg-[#FAFCFB] px-4 text-center text-xl font-black tracking-[0.28em] outline-none focus:border-[#C9A227]"
                   />
