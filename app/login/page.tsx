@@ -46,29 +46,17 @@ export default function LoginPage() {
       return;
     }
 
-    const { data: isAdminEmail, error: adminCheckError } = await supabase.rpc("is_admin_email", {
-      p_email: normalized,
-    });
-
-    if (adminCheckError) {
-      setError("بررسی حساب انجام نشد. دوباره تلاش کنید.");
-      setBusy(false);
-      return;
-    }
-
     const { error: loginError } = await supabase.auth.signInWithOtp({
       email: normalized,
       options: {
-        shouldCreateUser: isAdminEmail === true,
+        shouldCreateUser: false,
         emailRedirectTo: window.location.origin + "/login",
       },
     });
 
     if (loginError) {
       setError(
-        isAdminEmail === true
-          ? "ارسال کد ورود مدیر انجام نشد. تنظیمات ایمیل Supabase را بررسی کنید."
-          : "این ایمیل هنوز ثبت‌نام نشده است؛ ابتدا عضو شوید."
+        "ارسال کد ورود انجام نشد. اگر این ایمیل قبلاً ثبت‌نام نشده است، ابتدا عضو شوید."
       );
       setBusy(false);
       return;
