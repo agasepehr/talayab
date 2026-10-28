@@ -108,7 +108,7 @@ export default function LoginPage() {
               وارد حساب خودت شو و از امکانات TheTala استفاده کن؛ بدون نیاز به رمز عبور.
             </p>
             <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm leading-7 text-[#DCE9E3]">
-              کد ورود ۸ رقمی به ایمیل شما ارسال می‌شود و همان کد برای ورود استفاده می‌شود.
+              کد ورود ۶ رقمی به ایمیل شما ارسال می‌شود و همان کد برای ورود استفاده می‌شود.
             </div>
           </section>
 
