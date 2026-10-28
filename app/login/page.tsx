@@ -76,7 +76,7 @@ export default function LoginPage() {
     const normalized = email.trim().toLowerCase();
     const normalizedCode = code.trim();
 
-    if (!/^\d{8}$/.test(normalizedCode)) {
+    if (!/^\d{6}$/.test(normalizedCode)) {
       setError("کد تأیید باید ۶ رقمی باشد.");
       setBusy(false);
       return;
