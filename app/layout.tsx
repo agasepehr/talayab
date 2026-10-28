@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import ChunkRecovery from "./chunk-recovery";
 import { Geist, Geist_Mono } from "next/font/google";
 
 const geistSans = Geist({
@@ -82,7 +83,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           }}
         />
       </head>
-      <body className="min-h-full flex flex-col">\n        <ChunkRecovery />\n        {children}\n      </body>
+      <body className="min-h-full flex flex-col">
+        <ChunkRecovery />
+        {children}
+      </body>
     </html>
   );
 }
